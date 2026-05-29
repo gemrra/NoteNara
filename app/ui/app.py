@@ -644,11 +644,11 @@ class MainView(BaseView):
         if self.app._processing:
             return
         path = filedialog.askopenfilename(
-            title="Pilih audio / video",
+            title="Choose audio / video",
             filetypes=[("Audio/Video",
                          "*.mp4 *.mp3 *.wav *.m4a *.mkv *.webm *.ogg *.flac "
                          "*.aac *.opus *.mov *.avi"),
-                        ("Semua file", "*.*")])
+                        ("All files", "*.*")])
         if path:
             self._set_file(path)
 
@@ -957,7 +957,7 @@ class PreviewView(BaseView):
         self._populate_raw_section(inner)
 
     def _populate_summary_section(self, inner, summary):
-        _ornament_label(inner, "ringkasan").pack(fill="x", padx=24, pady=(18, 8))
+        _ornament_label(inner, "summary").pack(fill="x", padx=24, pady=(18, 8))
         card = _card(inner)
         card.pack(fill="x", padx=24)
         self._summary_text = _editable_text(card.inner, summary.summary,
@@ -1057,7 +1057,7 @@ class PreviewView(BaseView):
         s = self._collect_summary()
         if s is None:
             return self.app._transcript_text or ""
-        lines = [f"## Ringkasan\n\n{s.summary}\n",
+        lines = [f"## Summary\n\n{s.summary}\n",
                  "## Key points", *[f"- {p}" for p in s.key_points], "",
                  "## Action items", *[f"- [ ] {a}" for a in s.action_items], ""]
         return "\n".join(lines)
@@ -1147,7 +1147,7 @@ class NotionSetupView(BaseView):
         self._project_dd.pack(fill="x", pady=(0, 14))
 
         # Topic
-        self._field_label(body, "Topic / materi")
+        self._field_label(body, "Topic")
         self._topic_input = SmoothInput(body, placeholder="",
                                            height=38, radius=12,
                                            bg=C["card"])
@@ -1326,7 +1326,7 @@ class NotionSetupView(BaseView):
             return
         materi = self._topic_entry.get().strip()
         if not materi:
-            self._status.config(text="Topic / materi belum diisi.", fg=C["err"])
+            self._status.config(text="Topic is required.", fg=C["err"])
             return
         project = self._project_dd.get().strip()
         if project == "(no project)":
@@ -1334,7 +1334,7 @@ class NotionSetupView(BaseView):
 
         slug = self._slug_for(self._workspace_dd.get())
         if not slug:
-            self._status.config(text="Pilih workspace dulu.", fg=C["err"])
+            self._status.config(text="Choose a workspace first.", fg=C["err"])
             return
         profile = self.app.cfg["profiles"][slug]
 

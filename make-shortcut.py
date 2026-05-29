@@ -1,4 +1,4 @@
-﻿"""Create NoteNara.lnk with AppUserModelID property set.
+"""Create NoteNara.lnk with AppUserModelID property set.
 
 Windows uses the shortcut's AppID (System.AppUserModel.ID property) to decide
 which taskbar slot a launched app belongs to. If the .lnk has the same AppID

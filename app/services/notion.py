@@ -221,9 +221,9 @@ class NotionClient:
 
         Layout:
             🎙 (icon)
-            ## 📋 Ringkasan       → paragraphs
+            ## 📋 Summary          → paragraphs
             ---
-            ## 💬 Inti Diskusi    → bulleted list
+            ## 💬 Key Points       → bulleted list
             ---
             ## ✅ Action Items     → to-do checkboxes
             ---
@@ -239,11 +239,11 @@ class NotionClient:
             properties[date_prop] = {"date": {"start": date_iso}}
 
         children: list[dict[str, Any]] = []
-        children.append(_heading_2("📋 Ringkasan"))
+        children.append(_heading_2("📋 Summary"))
         children.extend(_paragraph_blocks(summary or "-"))
         children.append(_divider())
 
-        children.append(_heading_2("💬 Inti Diskusi"))
+        children.append(_heading_2("💬 Key Points"))
         if key_points:
             children.extend(_bulleted_blocks(key_points))
         else:
@@ -376,9 +376,9 @@ def format_page_title(project: str, materi: str, date_iso: str) -> str:
     """
     try:
         d = datetime.date.fromisoformat(date_iso)
-        # Indonesian month abbreviations — matches v1 locale 'id-ID' output
-        months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun",
-                  "Jul", "Agu", "Sep", "Okt", "Nov", "Des"]
+        # English month abbreviations for professional / international notes.
+        months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
         date_label = f"{d.day:02d} {months[d.month - 1]} {d.year}"
     except (ValueError, IndexError):
         date_label = date_iso

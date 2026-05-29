@@ -393,12 +393,12 @@ def scan_recent(output_dir: Path, max_items: int = 3) -> list[dict]:
         return []
     import datetime
     out = []
-    months_id = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun",
-                  "Jul", "Agu", "Sep", "Okt", "Nov", "Des"]
+    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+              "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     for f in files[:max_items]:
         try:
             mtime = datetime.datetime.fromtimestamp(f.stat().st_mtime)
-            date_str = f"{mtime.day} {months_id[mtime.month - 1]}"
+            date_str = f"{mtime.day} {months[mtime.month - 1]}"
         except (OSError, IndexError):
             date_str = "—"
         size = f.stat().st_size

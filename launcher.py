@@ -1,4 +1,4 @@
-﻿"""Tiny launcher that delegates to meeting_app.py via the local venv's pythonw.
+"""Tiny launcher that delegates to meeting_app.py via the local venv's pythonw.
 
 Compiled with PyInstaller into NoteNara.exe so the user gets a real .exe with
 the NoteNara icon embedded. The launcher itself ships <10 MB; the actual app

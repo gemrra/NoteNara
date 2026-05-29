@@ -194,27 +194,33 @@ class LLMClient:
     # ---------- Summarization ----------
 
     SYSTEM_PROMPT = (
-        "Kamu adalah notulen meeting profesional. Tugas kamu adalah membaca "
-        "transcript meeting dalam Bahasa Indonesia dan menghasilkan ringkasan "
-        "yang rapi dan terstruktur. Selalu balas HANYA dengan JSON valid sesuai "
-        "skema yang diminta — tanpa markdown, tanpa backtick, tanpa komentar."
+        "You are a professional meeting notes assistant. Your job is to read "
+        "a meeting transcript and produce a clean, structured summary. "
+        "Always respond ONLY with valid JSON matching the requested schema — "
+        "no markdown, no backticks, no commentary.\n\n"
+        "IMPORTANT: write the summary, key_points, and action_items in the "
+        "SAME LANGUAGE as the transcript. If the transcript is in Indonesian, "
+        "respond in Indonesian. If it is in English, respond in English. "
+        "Do not translate."
     )
 
     USER_TEMPLATE = (
-        "Topik meeting: {materi}\n"
+        "Meeting topic: {materi}\n"
         "Project: {project}\n\n"
         "Transcript:\n{transcript}\n\n"
-        "Tugas: analisis transcript di atas dan keluarkan ringkasan dalam JSON.\n\n"
-        "Aturan strict:\n"
-        "1. key_points: array of STRING. Bisa 2 sampai 15+ item — ikutin isi "
-        "meeting. JANGAN dipaksa jadi 3.\n"
-        "2. action_items: array of STRING (BUKAN object / dict). Tiap item "
-        "berupa satu kalimat: 'Deskripsi task - PIC (kalau disebutkan)'. "
-        "Contoh benar: 'Buat draft kontrak - Mas Danar'. Kalau gak ada task, "
-        "kasih array kosong [].\n"
-        "3. summary: STRING, 3-5 kalimat — apa yang dibahas + hasil / kesimpulan.\n\n"
-        "Balas HANYA dengan JSON valid (tanpa markdown, tanpa backtick, tanpa "
-        "prose tambahan). Struktur:\n"
+        "Task: analyse the transcript above and output a summary as JSON.\n\n"
+        "Strict rules:\n"
+        "1. key_points: array of STRING. Can be 2 to 15+ items — follow what "
+        "the meeting actually covered. DO NOT force exactly 3.\n"
+        "2. action_items: array of STRING (NOT object / dict). Each item is "
+        "one sentence: 'Task description - PIC (if mentioned)'. "
+        "Correct example: 'Draft the contract - Danar'. If there are no "
+        "tasks, return an empty array [].\n"
+        "3. summary: STRING, 3-5 sentences — what was discussed + outcome / "
+        "conclusion.\n\n"
+        "Match the language of the transcript (do not translate). "
+        "Respond ONLY with valid JSON (no markdown, no backticks, no extra "
+        "prose). Structure:\n"
         "{{\n"
         "  \"summary\": \"...\",\n"
         "  \"key_points\": [\"...\", \"...\"],\n"
@@ -261,7 +267,7 @@ class LLMClient:
 
         if not partials:
             return SummaryResult(
-                summary="[Semua chunk gagal — coba run ulang atau pakai model lebih besar.]",
+                summary="[All chunks failed — try running again or switch to a larger model.]",
                 key_points=[], action_items=[], truncated=truncated,
             )
 
@@ -291,8 +297,8 @@ class LLMClient:
             "messages": [
                 {"role": "system", "content": self.SYSTEM_PROMPT},
                 {"role": "user", "content": self.USER_TEMPLATE.format(
-                    materi=materi_label or "(tidak disebutkan)",
-                    project=project or "(tidak disebutkan)",
+                    materi=materi_label or "(not specified)",
+                    project=project or "(not specified)",
                     transcript=chunk_text,
                 )},
             ],
@@ -310,11 +316,13 @@ class LLMClient:
         )
 
     MERGE_PROMPT = (
-        "Berikut ringkasan per-bagian dari satu meeting yang panjang. "
-        "Tugas: buat SATU ringkasan akhir (3-5 kalimat) yang menggabungkan "
-        "semuanya menjadi narasi koheren dalam Bahasa Indonesia.\n\n"
-        "Ringkasan per-bagian:\n{partials}\n\n"
-        "Balas HANYA dengan JSON (tanpa markdown):\n"
+        "Below are section-by-section summaries from one long meeting. "
+        "Task: produce ONE final summary (3-5 sentences) that combines all "
+        "sections into a coherent narrative.\n\n"
+        "Write the final summary in the SAME LANGUAGE as the section "
+        "summaries — do not translate.\n\n"
+        "Section summaries:\n{partials}\n\n"
+        "Respond ONLY with JSON (no markdown):\n"
         "{{\"summary\": \"...\"}}"
     )
 
@@ -635,8 +643,8 @@ def _parse_summary_json(text: str) -> dict[str, Any]:
     truncated_text = text if len(text) < 1500 else text[:1500] + "\n…(truncated)"
     return {
         "summary": (
-            "[LLM gagal menghasilkan JSON valid — coba run ulang, "
-            "tingkatkan max_tokens, atau pakai model lebih besar.]\n\n"
+            "[LLM failed to produce valid JSON — try running again, "
+            "increase max_tokens, or switch to a larger model.]\n\n"
             + truncated_text
         ),
         "key_points": [],
