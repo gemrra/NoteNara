@@ -19,6 +19,7 @@ from ..config import (
     save_config, set_active_profile,
 )
 from ..constants import C, F, apply_theme
+from ..i18n import t
 from ..services.llm import LLMClient
 from ..services.notion import DatabaseRef, NotionClient, SchemaDetection
 from .smooth import (
@@ -87,15 +88,17 @@ class SettingsView(tk.Frame):
     Right pane: tab content (the existing *Tab Frame classes).
     """
 
-    title = "Settings"
+    title = "chrome.settings.title"
     can_go_back = True
 
+    # Tab labels are localised at instance-build time (see _build) since
+    # class-level attributes evaluate before the locale is set.
     TABS = [
-        ("notion",        "Notion",         "users"),
-        ("ai",            "AI model",       "lightning"),
-        ("transcription", "Transcription",  "mic"),
-        ("notifications", "Notifications",  "bell"),
-        ("output",        "Output",         "folder"),
+        ("notion",        "settings.tab.notion",          "users"),
+        ("ai",            "settings.tab.ai",              "lightning"),
+        ("transcription", "settings.tab.transcription",   "mic"),
+        ("notifications", "settings.tab.notifications",   "bell"),
+        ("output",        "settings.tab.output",          "folder"),
     ]
 
     def __init__(self, parent, app):
@@ -121,8 +124,8 @@ class SettingsView(tk.Frame):
         divider = tk.Frame(body, width=1, bg=C["border_soft"])
         divider.pack(side="left", fill="y", padx=(6, 0), pady=(6, 0))
 
-        for slug, label, icon_name in self.TABS:
-            row = self._build_tab_row(rail, slug, label, icon_name)
+        for slug, label_key, icon_name in self.TABS:
+            row = self._build_tab_row(rail, slug, t(label_key), icon_name)
             row.pack(fill="x", pady=1)
 
         # Right pane — tabs are place()'d full size and lift()'ed when active.
@@ -150,9 +153,9 @@ class SettingsView(tk.Frame):
             fill="x", padx=14)
         row = tk.Frame(footer, bg=C["card"])
         row.pack(fill="x", padx=18, pady=12)
-        RoundedButton(row, "Cancel", self._cancel,
+        RoundedButton(row, t("btn.cancel"), self._cancel,
                        kind="secondary", size="md").pack(side="left")
-        RoundedButton(row, "Save", self._save,
+        RoundedButton(row, t("btn.save"), self._save,
                        kind="primary", size="md").pack(side="right")
 
         # Show default tab
@@ -285,10 +288,11 @@ class SettingsView(tk.Frame):
 class NotionTab(tk.Frame):
     """All Notion-related settings: workspaces, page format, defaults."""
 
+    # Localised on instance build — see _build.
     TITLE_FORMATS = [
-        ("Project — Materi — Date",  "standard"),
-        ("Materi — Date",            "simple"),
-        ("Date · Materi",            "date_first"),
+        ("settings.notion.title_fmt.standard",   "standard"),
+        ("settings.notion.title_fmt.simple",     "simple"),
+        ("settings.notion.title_fmt.date_first", "date_first"),
     ]
 
     def __init__(self, parent, cfg: dict, app):
@@ -337,9 +341,9 @@ class NotionTab(tk.Frame):
         inner.pack(fill="both", expand=True, padx=10, pady=10)
 
         # ===== Section 1: Workspaces =====
-        _section_label(inner, "Workspaces")
+        _section_label(inner, t("settings.notion.workspaces"))
         tk.Label(inner,
-                 text="Each workspace = one Notion integration token + its target DB.",
+                 text=t("settings.notion.workspaces_hint"),
                  bg=C["card"], fg=C["ink3"], font=F("mono", 9),
                  anchor="w", wraplength=320, justify="left").pack(
             fill="x", pady=(0, 8))
@@ -351,21 +355,21 @@ class NotionTab(tk.Frame):
 
         actions = tk.Frame(inner, bg=C["card"])
         actions.pack(fill="x", pady=(10, 0))
-        RoundedButton(actions, "+ Add workspace", self._add,
+        RoundedButton(actions, t("btn.add_workspace"), self._add,
                        kind="primary", size="sm").pack(side="left")
-        RoundedButton(actions, "Delete", self._delete,
+        RoundedButton(actions, t("btn.delete"), self._delete,
                        kind="ghost", size="sm").pack(side="right", padx=(6, 0))
-        RoundedButton(actions, "Set Active", self._set_active,
+        RoundedButton(actions, t("btn.set_active"), self._set_active,
                        kind="secondary", size="sm").pack(side="right", padx=(6, 0))
-        RoundedButton(actions, "Edit", self._edit,
+        RoundedButton(actions, t("btn.edit"), self._edit,
                        kind="secondary", size="sm").pack(side="right")
 
         # ===== Section 2: Page format =====
         tk.Frame(inner, height=1, bg=C["border_soft"]).pack(
             fill="x", pady=(20, 14))
-        _section_label(inner, "Page format")
+        _section_label(inner, t("settings.notion.page_format"))
         tk.Label(inner,
-                 text="How meeting pages look when published.",
+                 text=t("settings.notion.page_format_hint"),
                  bg=C["card"], fg=C["ink3"], font=F("mono", 9),
                  anchor="w").pack(fill="x", pady=(0, 10))
 
@@ -376,7 +380,8 @@ class NotionTab(tk.Frame):
         icol = tk.Frame(fmt_row, bg=C["card"], width=120)
         icol.pack(side="left", padx=(0, 8))
         icol.pack_propagate(False)
-        tk.Label(icol, text="PAGE ICON", bg=C["card"], fg=C["ink3"],
+        tk.Label(icol, text=t("settings.notion.page_icon"),
+                 bg=C["card"], fg=C["ink3"],
                  font=F("mono", 8)).pack(anchor="w", pady=(0, 3))
         icon_inp = SmoothInput(icol, height=34, radius=11, bg=C["card"])
         icon_inp.pack(fill="x")
@@ -385,13 +390,16 @@ class NotionTab(tk.Frame):
 
         tcol = tk.Frame(fmt_row, bg=C["card"])
         tcol.pack(side="left", fill="x", expand=True, padx=(8, 0))
-        tk.Label(tcol, text="TITLE FORMAT", bg=C["card"], fg=C["ink3"],
+        tk.Label(tcol, text=t("settings.notion.title_format"),
+                 bg=C["card"], fg=C["ink3"],
                  font=F("mono", 8)).pack(anchor="w", pady=(0, 3))
+        title_fmt_labels = [t(key) for key, _ in self.TITLE_FORMATS]
+        current_fmt_slug = notion.get("title_format", "standard")
+        current_fmt_label = next(
+            (t(key) for key, slug in self.TITLE_FORMATS
+             if slug == current_fmt_slug), title_fmt_labels[0])
         self._title_fmt_dd = SmoothDropdown(
-            tcol, values=[label for label, _ in self.TITLE_FORMATS],
-            initial=next((label for label, slug in self.TITLE_FORMATS
-                          if slug == notion.get("title_format", "standard")),
-                          self.TITLE_FORMATS[0][0]),
+            tcol, values=title_fmt_labels, initial=current_fmt_label,
             height=34, radius=11, bg=C["card"])
         self._title_fmt_dd.pack(fill="x")
 
@@ -404,26 +412,25 @@ class NotionTab(tk.Frame):
         self._raw_cb.pack(side="left", padx=(0, 10))
         col = tk.Frame(trans_row, bg=C["card"])
         col.pack(side="left", fill="x", expand=True)
-        tk.Label(col, text="Include raw transcript (collapsed toggle)",
+        tk.Label(col, text=t("settings.notion.include_raw"),
                  bg=C["card"], fg=C["ink"], font=F("body", 10),
                  anchor="w").pack(fill="x")
-        tk.Label(col, text="Off = lighter page, transcript stays as local .txt only.",
+        tk.Label(col, text=t("settings.notion.include_raw_hint"),
                  bg=C["card"], fg=C["ink3"], font=F("mono", 9),
                  anchor="w").pack(fill="x", pady=(2, 0))
 
         # ===== Section 3: Active workspace databases =====
         tk.Frame(inner, height=1, bg=C["border_soft"]).pack(
             fill="x", pady=(20, 14))
-        _section_label(inner, "Active workspace databases")
+        _section_label(inner, t("settings.notion.active_dbs"))
         tk.Label(inner,
-                 text="Where meeting notes get published + where project list "
-                       "is sourced from.",
+                 text=t("settings.notion.active_dbs_hint"),
                  bg=C["card"], fg=C["ink3"], font=F("mono", 9),
                  anchor="w", wraplength=420,
                  justify="left").pack(fill="x", pady=(0, 10))
 
         # Target DB picker
-        tk.Label(inner, text="TARGET DATABASE  (notes get created here)",
+        tk.Label(inner, text=t("settings.notion.target_db_label"),
                  bg=C["card"], fg=C["ink3"],
                  font=F("mono", 8)).pack(anchor="w", pady=(0, 3))
         self._target_db_dd = SmoothDropdown(
@@ -433,13 +440,14 @@ class NotionTab(tk.Frame):
         self._target_db_dd.pack(fill="x", pady=(0, 10))
 
         # Projects DB picker
-        tk.Label(inner, text="PROJECTS DATABASE  (optional — source for project list)",
+        tk.Label(inner, text=t("settings.notion.projects_db_label"),
                  bg=C["card"], fg=C["ink3"],
                  font=F("mono", 8)).pack(anchor="w", pady=(0, 3))
+        _projects_none = t("settings.notion.projects_db_none")
         self._projects_db_dd = SmoothDropdown(
-            inner, values=["(none — search all pages)"],
-            initial="(none — search all pages)",
-            placeholder="(none — search all pages)",
+            inner, values=[_projects_none],
+            initial=_projects_none,
+            placeholder=_projects_none,
             height=36, radius=11, bg=C["card"],
             on_change=lambda v: self._on_projects_db_change(v))
         self._projects_db_dd.pack(fill="x", pady=(0, 14))
@@ -447,23 +455,24 @@ class NotionTab(tk.Frame):
         # ===== Section 4: Defaults =====
         tk.Frame(inner, height=1, bg=C["border_soft"]).pack(
             fill="x", pady=(6, 14))
-        _section_label(inner, "Defaults")
+        _section_label(inner, t("settings.notion.defaults"))
         tk.Label(inner,
-                 text="Pre-fill the publish form so each meeting is quicker.",
+                 text=t("settings.notion.defaults_hint"),
                  bg=C["card"], fg=C["ink3"], font=F("mono", 9),
                  anchor="w").pack(fill="x", pady=(0, 10))
 
-        tk.Label(inner, text="DEFAULT PROJECT",
+        tk.Label(inner, text=t("settings.notion.default_project"),
                  bg=C["card"], fg=C["ink3"],
                  font=F("mono", 8)).pack(anchor="w", pady=(0, 3))
+        _ask_each = t("settings.notion.default_project_ask")
         self._default_project_dd = SmoothDropdown(
-            inner, values=["(ask each time)"],
-            initial=notion.get("default_project") or "(ask each time)",
-            placeholder="(ask each time)",
+            inner, values=[_ask_each],
+            initial=notion.get("default_project") or _ask_each,
+            placeholder=_ask_each,
             height=36, radius=11, bg=C["card"])
         self._default_project_dd.pack(fill="x", pady=(0, 4))
         tk.Label(inner,
-                 text="'(ask each time)' = pick per meeting.",
+                 text=t("settings.notion.default_project_hint"),
                  bg=C["card"], fg=C["ink3"], font=F("mono", 9),
                  anchor="w").pack(fill="x", pady=(0, 10))
 
@@ -476,18 +485,18 @@ class NotionTab(tk.Frame):
         self._auto_publish_cb.pack(side="left", padx=(0, 10))
         auto_col = tk.Frame(auto_row, bg=C["card"])
         auto_col.pack(side="left", fill="x", expand=True)
-        tk.Label(auto_col, text="Skip preview, auto-publish to Notion",
+        tk.Label(auto_col, text=t("settings.notion.auto_publish"),
                  bg=C["card"], fg=C["ink"], font=F("body", 10),
                  anchor="w").pack(fill="x")
         tk.Label(auto_col,
-                 text="One-click meeting → page. You trust the LLM.",
+                 text=t("settings.notion.auto_publish_hint"),
                  bg=C["card"], fg=C["ink3"], font=F("mono", 9),
                  anchor="w").pack(fill="x", pady=(2, 0))
 
         # ===== Section 4: Account info =====
         tk.Frame(inner, height=1, bg=C["border_soft"]).pack(
             fill="x", pady=(20, 14))
-        _section_label(inner, "Active workspace")
+        _section_label(inner, t("settings.notion.active"))
         self._account_card = SmoothCard(inner, radius=12, padding=12,
                                             bg=C["card"])
         self._account_card.pack(fill="x", pady=(0, 8))
@@ -506,7 +515,7 @@ class NotionTab(tk.Frame):
 
         acc_actions = tk.Frame(inner, bg=C["card"])
         acc_actions.pack(fill="x")
-        RoundedButton(acc_actions, "Test connection",
+        RoundedButton(acc_actions, t("btn.test_connection"),
                        self._test_active, kind="secondary",
                        size="sm").pack(side="left")
 
@@ -534,14 +543,14 @@ class NotionTab(tk.Frame):
 
         if not profiles:
             tk.Label(self._list_inner,
-                     text="No workspaces yet. Click + Add to create one.",
+                     text=t("settings.notion.empty"),
                      bg=C["card"], fg=C["ink3"],
                      font=F("mono", 9),
                      padx=10, pady=14).pack()
             # Account section shows nothing
             if hasattr(self, "_account_label"):
                 self._account_label.config(text="—")
-                self._account_status.config(text="No active workspace")
+                self._account_status.config(text=t("settings.notion.no_active"))
             return
 
         for slug, prof in profiles.items():
@@ -561,7 +570,7 @@ class NotionTab(tk.Frame):
             self._account_label.config(
                 text=f"{label}  ·  {active}\nTarget DB: …{db_id}")
             self._account_status.config(
-                text="Click 'Test connection' to verify.",
+                text=t("settings.notion.test_hint"),
                 fg=C["ink3"])
 
         # Populate ALL three workspace-dependent dropdowns async — target DB,
@@ -716,7 +725,7 @@ class NotionTab(tk.Frame):
         if not slug:
             return
         if len(self.cfg.get("profiles", {})) <= 1:
-            self.app.toast("Can't delete the last workspace.", kind="err")
+            self.app.toast(t("settings.notion.cant_delete_last"), kind="err")
             return
         delete_profile(self.cfg, slug)
         save_config(self.cfg)
@@ -733,28 +742,31 @@ class NotionTab(tk.Frame):
     def commit(self):
         notion = self.cfg.setdefault("notion", {})
         notion["page_icon"] = self._page_icon_entry.get().strip() or "🎙️"
+        # Map the (localised) dropdown label back to its slug.
         label = self._title_fmt_dd.get()
-        slug = next((s for lbl, s in self.TITLE_FORMATS if lbl == label),
+        slug = next((s for key, s in self.TITLE_FORMATS if t(key) == label),
                       "standard")
         notion["title_format"] = slug
         notion["include_raw_transcript"] = self._raw_cb.is_checked()
         v = self._default_project_dd.get().strip()
-        notion["default_project"] = "" if v == "(ask each time)" else v
+        ask_each = t("settings.notion.default_project_ask")
+        notion["default_project"] = "" if v == ask_each else v
         notion["auto_publish"] = self._auto_publish_cb.is_checked()
 
     def _test_active(self):
         active = self.cfg.get("active_profile", "")
         if not active:
-            self._account_status.config(text="No active workspace.",
+            self._account_status.config(text=t("settings.notion.no_active_err"),
                                           fg=C["err"])
             return
         profile = self.cfg.get("profiles", {}).get(active, {})
         token = profile.get("notion_token", "")
         if not token:
-            self._account_status.config(text="Token missing.",
+            self._account_status.config(text=t("settings.notion.token_missing"),
                                           fg=C["err"])
             return
-        self._account_status.config(text="Testing…", fg=C["ink3"])
+        self._account_status.config(text=t("settings.notion.testing"),
+                                      fg=C["ink3"])
         threading.Thread(target=self._test_thread,
                          args=(profile,), daemon=True).start()
 
@@ -762,11 +774,12 @@ class NotionTab(tk.Frame):
         client = NotionClient(profile["notion_token"])
         result = client.test_connection()
         if result.ok:
-            msg = (f"✓ Connected · {result.workspace_name or 'workspace'} · "
-                   f"bot: {result.bot_name or '—'}")
+            msg = t("settings.notion.test_ok",
+                    workspace=result.workspace_name or "workspace",
+                    bot=result.bot_name or "—")
             color = C["ok"]
         else:
-            msg = f"✗ {result.error[:80]}"
+            msg = t("settings.notion.test_err", err=result.error[:80])
             color = C["err"]
         self.after(0, lambda: self._account_status.config(text=msg, fg=color))
 
@@ -776,7 +789,7 @@ class NotionTab(tk.Frame):
 # ============================================================================
 
 class WorkspaceEditorView(tk.Frame):
-    title = "Workspace"
+    title = "ws_editor.title.add"
     can_go_back = True
 
     def __init__(self, parent, app):
@@ -794,17 +807,17 @@ class WorkspaceEditorView(tk.Frame):
         body = tk.Frame(self, bg=C["card"])
         body.pack(fill="both", expand=True, padx=20, pady=(8, 14))
 
-        self._title_label = tk.Label(body, text="Add workspace",
+        self._title_label = tk.Label(body, text=t("ws_editor.title.add"),
                                        bg=C["card"], fg=C["ink"],
                                        font=F("display", 18, italic=True))
         self._title_label.pack(anchor="w", pady=(0, 12))
 
-        self._label_entry = _labeled_entry(body, "Label", "")
-        self._token_entry = _labeled_entry(body, "Notion integration token",
+        self._label_entry = _labeled_entry(body, t("ws_editor.label"), "")
+        self._token_entry = _labeled_entry(body, t("ws_editor.token"),
                                              "", show="•")
 
         link = tk.Label(body,
-                          text="🔗  notion.so/my-integrations",
+                          text=t("ws_editor.link"),
                           bg=C["card"], fg=C["orange"],
                           font=F("mono", 9), cursor="hand2")
         link.pack(anchor="w", pady=(0, 10))
@@ -813,33 +826,34 @@ class WorkspaceEditorView(tk.Frame):
 
         test_row = tk.Frame(body, bg=C["card"])
         test_row.pack(fill="x", pady=(0, 12))
-        RoundedButton(test_row, "Test & fetch databases",
+        RoundedButton(test_row, t("ws_editor.test_fetch"),
                         self._test_and_fetch,
                         kind="secondary", size="sm").pack(side="left")
         self._status = tk.Label(test_row, text="", bg=C["card"],
                                  fg=C["ink3"], font=F("mono", 9))
         self._status.pack(side="left", padx=(10, 0))
 
-        _section_label(body, "Target database — where meeting notes go")
+        _section_label(body, t("ws_editor.target"))
         self._target_dd = SmoothDropdown(body, values=[],
-                                            placeholder="(test connection first)",
+                                            placeholder=t("ws_editor.target_placeholder"),
                                             on_change=lambda v: self._on_target_change_v(v),
                                             height=34, radius=11, bg=C["card"])
         self._target_dd.pack(fill="x", pady=(0, 12))
 
-        _section_label(body, "Projects database — optional")
+        _section_label(body, t("ws_editor.projects"))
         self._projects_dd = SmoothDropdown(body, values=[],
-                                              placeholder="(none — search all pages)",
+                                              placeholder=t("ws_editor.projects_placeholder"),
                                               height=34, radius=11, bg=C["card"])
         self._projects_dd.pack(fill="x", pady=(0, 12))
 
-        _section_label(body, "Schema mapping — auto-detected")
+        _section_label(body, t("ws_editor.schema"))
         sch_row = tk.Frame(body, bg=C["card"])
         sch_row.pack(fill="x", pady=(0, 14))
 
         tcol = tk.Frame(sch_row, bg=C["card"])
         tcol.pack(side="left", fill="x", expand=True, padx=(0, 6))
-        tk.Label(tcol, text="TITLE", bg=C["card"], fg=C["ink3"],
+        tk.Label(tcol, text=t("ws_editor.title_prop"), bg=C["card"],
+                 fg=C["ink3"],
                  font=F("mono", 8)).pack(anchor="w", pady=(0, 3))
         title_inp = SmoothInput(tcol, height=30, radius=10, bg=C["card"])
         title_inp.pack(fill="x")
@@ -847,7 +861,8 @@ class WorkspaceEditorView(tk.Frame):
 
         dcol = tk.Frame(sch_row, bg=C["card"])
         dcol.pack(side="left", fill="x", expand=True, padx=(6, 0))
-        tk.Label(dcol, text="DATE", bg=C["card"], fg=C["ink3"],
+        tk.Label(dcol, text=t("ws_editor.date_prop"), bg=C["card"],
+                 fg=C["ink3"],
                  font=F("mono", 8)).pack(anchor="w", pady=(0, 3))
         date_inp = SmoothInput(dcol, height=30, radius=10, bg=C["card"])
         date_inp.pack(fill="x")
@@ -855,10 +870,10 @@ class WorkspaceEditorView(tk.Frame):
 
         footer = tk.Frame(body, bg=C["card"])
         footer.pack(fill="x", side="bottom", pady=(6, 0))
-        RoundedButton(footer, "Cancel",
+        RoundedButton(footer, t("btn.cancel"),
                         lambda: self.app.go_back(),
                         kind="secondary", size="md").pack(side="left")
-        RoundedButton(footer, "Save",
+        RoundedButton(footer, t("btn.save"),
                         self._save, kind="primary", size="md").pack(side="right")
 
     def on_enter(self, slug: Optional[str] = None, **_):
@@ -873,10 +888,10 @@ class WorkspaceEditorView(tk.Frame):
         self._projects_dd.set("")
 
         if slug:
-            self._title_label.config(text=f"Edit workspace — {slug}")
+            self._title_label.config(text=t("ws_editor.title.edit", slug=slug))
             existing = self.cfg.get("profiles", {}).get(slug, {})
         else:
-            self._title_label.config(text="Add workspace")
+            self._title_label.config(text=t("ws_editor.title.add"))
             existing = {}
 
         self._label_entry.delete(0, "end")
@@ -902,9 +917,10 @@ class WorkspaceEditorView(tk.Frame):
     def _test_and_fetch(self):
         token = self._token_entry.get().strip()
         if not token:
-            self._status.config(text="Enter a token first.", fg=C["err"])
+            self._status.config(text=t("ws_editor.err.token_first"),
+                                  fg=C["err"])
             return
-        self._status.config(text="Testing…", fg=C["ink3"])
+        self._status.config(text=t("ws_editor.testing"), fg=C["ink3"])
         threading.Thread(target=self._fetch_thread, args=(token,),
                          daemon=True).start()
 
@@ -926,13 +942,14 @@ class WorkspaceEditorView(tk.Frame):
     def _on_dbs_loaded(self, workspace_name: str, dbs: list[DatabaseRef]):
         self._databases = dbs
         self._status.config(
-            text=f"✓ {workspace_name or 'workspace'} · {len(dbs)} db(s)",
+            text=t("ws_editor.test_ok",
+                   workspace=workspace_name or "workspace", n=len(dbs)),
             fg=C["ok"])
         self._db_labels = [f"{db.icon + ' ' if db.icon else ''}{db.title}"
                             for db in dbs]
         self._target_dd.set_values(self._db_labels)
         self._projects_dd.set_values(
-            ["(none — search all pages)"] + self._db_labels)
+            [t("ws_editor.projects_placeholder")] + self._db_labels)
 
         if self._preselect_target:
             for i, db in enumerate(dbs):
@@ -947,7 +964,7 @@ class WorkspaceEditorView(tk.Frame):
                     self._projects_dd.set(self._db_labels[i])
                     break
         else:
-            self._projects_dd.set("(none — search all pages)")
+            self._projects_dd.set(t("ws_editor.projects_placeholder"))
 
     def _on_target_change_v(self, value: str):
         # Find which DB by label
@@ -974,7 +991,7 @@ class WorkspaceEditorView(tk.Frame):
         label = self._label_entry.get().strip()
         token = self._token_entry.get().strip()
         if not label or not token:
-            self._status.config(text="Label and token are required.",
+            self._status.config(text=t("ws_editor.err.required"),
                                   fg=C["err"])
             return
 
@@ -982,13 +999,14 @@ class WorkspaceEditorView(tk.Frame):
         try:
             tgt_idx = self._db_labels.index(target_label)
         except (ValueError, AttributeError):
-            self._status.config(text="Pick a target database.", fg=C["err"])
+            self._status.config(text=t("ws_editor.err.pick_target"),
+                                  fg=C["err"])
             return
         target_db_id = self._databases[tgt_idx].id
 
         projects_label = self._projects_dd.get()
         projects_db_id: Optional[str] = None
-        if projects_label and projects_label != "(none — search all pages)":
+        if projects_label and projects_label != t("ws_editor.projects_placeholder"):
             try:
                 p_idx = self._db_labels.index(projects_label)
                 projects_db_id = self._databases[p_idx].id
@@ -1092,7 +1110,7 @@ class LLMTab(tk.Frame):
         body = tk.Frame(self, bg=C["card"])
         body.pack(fill="both", expand=True, padx=12, pady=12)
 
-        _section_label(body, "Provider")
+        _section_label(body, t("settings.ai.provider"))
         self._provider_var = tk.StringVar(value=llm.get("provider", "lm_studio"))
         # 2-column grid of provider cards (compact)
         grid = tk.Frame(body, bg=C["card"])
@@ -1114,20 +1132,20 @@ class LLMTab(tk.Frame):
         self._provider_hint.pack(anchor="w", pady=(0, 10))
 
         # Smooth inputs for URL + API key
-        _section_label(body, "Base URL")
+        _section_label(body, t("settings.ai.base_url"))
         self._base_url_input = SmoothInput(body, height=36, radius=11, bg=C["card"])
         self._base_url_input.pack(fill="x", pady=(0, 10))
         self._base_url_input.set(llm.get("base_url", ""))
         self._base_url = self._base_url_input.entry  # back-compat
 
-        _section_label(body, "API key   only for cloud providers")
+        _section_label(body, t("settings.ai.api_key"))
         self._api_key_input = SmoothInput(body, height=36, radius=11,
                                               show="•", bg=C["card"])
         self._api_key_input.pack(fill="x", pady=(0, 10))
         self._api_key_input.set(llm.get("api_key", "lm-studio"))
         self._api_key = self._api_key_input.entry
 
-        _section_label(body, "Model")
+        _section_label(body, t("settings.ai.model"))
         # Pre-load provider-specific model list so dropdown has real options
         # on first open (instead of just ["auto"] until user runs Test).
         saved_provider = llm.get("provider", "lm_studio")
@@ -1142,7 +1160,7 @@ class LLMTab(tk.Frame):
 
         test_row = tk.Frame(body, bg=C["bg_card"])
         test_row.pack(fill="x", pady=(0, 14))
-        _ghost_button(test_row, "Test connection",
+        _ghost_button(test_row, t("btn.test_connection"),
                        self._test).pack(side="left", ipadx=12, ipady=6)
         self._status = tk.Label(test_row, text="", bg=C["bg_card"],
                                  fg=C["text3"], font=("Consolas", 9))
@@ -1154,11 +1172,13 @@ class LLMTab(tk.Frame):
         tcol = tk.Frame(adv, bg=C["bg_card"])
         tcol.pack(side="left", fill="x", expand=True, padx=(0, 8))
         self._temp_entry = _labeled_entry(
-            tcol, "Temperature (0-1)", str(llm.get("temperature", 0.3)))
+            tcol, t("settings.ai.temperature"),
+            str(llm.get("temperature", 0.3)))
         ocol = tk.Frame(adv, bg=C["bg_card"])
         ocol.pack(side="left", fill="x", expand=True, padx=(8, 0))
         self._timeout_entry = _labeled_entry(
-            ocol, "Timeout (seconds)", str(llm.get("timeout", 300)))
+            ocol, t("settings.ai.timeout"),
+            str(llm.get("timeout", 300)))
 
         # Sync hint with initial provider
         self._on_provider_change(None)
@@ -1218,7 +1238,8 @@ class LLMTab(tk.Frame):
         # All providers now have adapter support. Show API key requirement
         # so user knows what to fill in.
         key_hint = self.PROVIDER_KEY_HINTS.get(slug, "")
-        self._provider_hint.config(text=f"API key: {key_hint}",
+        self._provider_hint.config(text=t("settings.ai.api_key_hint",
+                                            hint=key_hint),
                                       fg=C["ink3"])
 
     # Backwards-compat shim — older code paths may still reference this
@@ -1227,7 +1248,7 @@ class LLMTab(tk.Frame):
         self._select_provider(slug)
 
     def _test(self):
-        self._status.config(text="Testing…", fg=C["ink3"])
+        self._status.config(text=t("settings.ai.testing"), fg=C["ink3"])
         provider = self._provider_var.get() or "lm_studio"
         url = self._base_url_input.get().strip()
         api_key = self._api_key_input.get().strip() or "lm-studio"
@@ -1247,10 +1268,11 @@ class LLMTab(tk.Frame):
             self.after(0, lambda: self._on_test_ok(provider, chat_models))
         else:
             self.after(0, lambda: self._status.config(
-                text=f"✗ {result.error[:70]}", fg=C["err"]))
+                text=t("settings.ai.test_err", err=result.error[:70]),
+                fg=C["err"]))
 
     def _on_test_ok(self, provider: str, models: list[str]):
-        self._status.config(text=f"✓ Connected · {len(models)} model(s)",
+        self._status.config(text=t("settings.ai.test_ok", n=len(models)),
                               fg=C["ok"])
         # OpenAI-compat providers (LM Studio / Ollama / OpenAI / DeepSeek /
         # Custom) expose /models and allow 'auto' first-match selection.
@@ -1349,9 +1371,8 @@ class WhisperTab(tk.Frame):
             body, values=model_labels,
             initial=self._label_for(self.MODEL_OPTIONS, w.get("model", "turbo")),
             height=34, radius=11, bg=C["card"])
-        _field(body, "Model",
-               "Transcription engine size. Larger = more accurate but slower "
-               "and uses more GPU memory.",
+        _field(body, t("settings.whisper.model"),
+               t("settings.whisper.model_hint"),
                self._model_dd)
 
         # === Language
@@ -1361,9 +1382,8 @@ class WhisperTab(tk.Frame):
             initial=self._label_for(self.LANG_OPTIONS,
                                      w.get("language") or "auto"),
             height=34, radius=11, bg=C["card"])
-        _field(body, "Audio language",
-               "Tell Whisper which language the meeting is in. 'Auto-detect' "
-               "guesses from the first few seconds.",
+        _field(body, t("settings.whisper.language"),
+               t("settings.whisper.language_hint"),
                self._lang_dd)
 
         # === Compute type
@@ -1373,9 +1393,8 @@ class WhisperTab(tk.Frame):
             initial=self._label_for(self.COMPUTE_OPTIONS,
                                      w.get("compute_type", "float16")),
             height=34, radius=11, bg=C["card"])
-        _field(body, "Number precision",
-               "How precisely the model does math. Lower precision = faster, "
-               "uses less VRAM. 'Balanced' works for most GPUs.",
+        _field(body, t("settings.whisper.compute"),
+               t("settings.whisper.compute_hint"),
                self._compute_dd)
 
         # === Beam size
@@ -1385,9 +1404,8 @@ class WhisperTab(tk.Frame):
             initial=self._label_for(self.BEAM_OPTIONS,
                                      int(w.get("beam_size", 5))),
             height=34, radius=11, bg=C["card"])
-        _field(body, "Decode quality",
-               "How hard Whisper searches for the best transcription. "
-               "'Thorough' costs ~2× time vs 'Quick' but catches harder words.",
+        _field(body, t("settings.whisper.beam"),
+               t("settings.whisper.beam_hint"),
                self._beam_dd)
 
         # === Hardware (GPU vs CPU)
@@ -1397,10 +1415,8 @@ class WhisperTab(tk.Frame):
             initial=self._label_for(self.DEVICE_OPTIONS,
                                      (w.get("device") or "cuda").lower()),
             height=34, radius=11, bg=C["card"])
-        _field(body, "Hardware",
-               "Use GPU for speed, or switch to CPU if Whisper hangs at "
-               "'Loading services…' (usually because LM Studio is holding "
-               "your VRAM). CPU forces int8 precision automatically.",
+        _field(body, t("settings.whisper.device"),
+               t("settings.whisper.device_hint"),
                self._device_dd)
 
         # === VAD checkbox
@@ -1412,12 +1428,11 @@ class WhisperTab(tk.Frame):
         self._vad_cb.pack(side="left", padx=(0, 10), anchor="n", pady=(2, 0))
         vad_col = tk.Frame(vad_row, bg=C["card"])
         vad_col.pack(side="left", fill="x", expand=True)
-        tk.Label(vad_col, text="Skip silence (recommended)",
+        tk.Label(vad_col, text=t("settings.whisper.vad"),
                  bg=C["card"], fg=C["ink"], font=F("body", 10, "bold"),
                  anchor="w").pack(fill="x")
         tk.Label(vad_col,
-                 text="Removes quiet gaps before transcribing — prevents the "
-                       "model from inventing repeating phrases on silence.",
+                 text=t("settings.whisper.vad_hint"),
                  bg=C["card"], fg=C["ink3"], font=F("mono", 9),
                  anchor="w", wraplength=520,
                  justify="left").pack(fill="x", pady=(2, 0))
@@ -1476,25 +1491,26 @@ class TelegramTab(tk.Frame):
         inner.pack(fill="both", expand=True, padx=12, pady=12)
 
         # === Telegram section
-        _section_label(inner, "Telegram")
+        _section_label(inner, t("settings.notif.telegram"))
         tg_row = tk.Frame(inner, bg=C["card"])
         tg_row.pack(fill="x", pady=(0, 8))
         self._tg_enabled_cb = SmoothCheckBox(
             tg_row, checked=bool(tg.get("enabled", False)),
             size=18, bg=C["card"])
         self._tg_enabled_cb.pack(side="left", padx=(0, 10))
-        tk.Label(tg_row, text="Enable Telegram notifications",
+        tk.Label(tg_row, text=t("settings.notif.tg_enable"),
                  bg=C["card"], fg=C["ink"],
                  font=F("body", 10, "bold")).pack(side="left")
 
         self._tg_token_entry = _labeled_entry(
-            inner, "Bot token", tg.get("bot_token", ""), show="•")
+            inner, t("settings.notif.tg_token"),
+            tg.get("bot_token", ""), show="•")
         self._tg_chat_entry = _labeled_entry(
-            inner, "Chat ID", tg.get("chat_id", ""))
+            inner, t("settings.notif.tg_chat"), tg.get("chat_id", ""))
 
         tg_test = tk.Frame(inner, bg=C["card"])
         tg_test.pack(fill="x", pady=(0, 6))
-        RoundedButton(tg_test, "Send test message", self._test_telegram,
+        RoundedButton(tg_test, t("btn.send_test"), self._test_telegram,
                        kind="secondary", size="sm").pack(side="left")
         self._tg_status = tk.Label(tg_test, text="",
                                       bg=C["card"], fg=C["ink3"],
@@ -1502,8 +1518,7 @@ class TelegramTab(tk.Frame):
         self._tg_status.pack(side="left", padx=(10, 0))
 
         tk.Label(inner,
-                 text="@BotFather to create a bot + grab token. "
-                       "DM the bot, then @userinfobot to get your chat ID.",
+                 text=t("settings.notif.tg_hint"),
                  bg=C["card"], fg=C["ink3"], font=F("mono", 9),
                  wraplength=520, justify="left",
                  anchor="w").pack(fill="x", pady=(4, 14))
@@ -1511,23 +1526,24 @@ class TelegramTab(tk.Frame):
         # === Discord section
         tk.Frame(inner, height=1, bg=C["border_soft"]).pack(
             fill="x", pady=(6, 12))
-        _section_label(inner, "Discord")
+        _section_label(inner, t("settings.notif.discord"))
         dc_row = tk.Frame(inner, bg=C["card"])
         dc_row.pack(fill="x", pady=(0, 8))
         self._dc_enabled_cb = SmoothCheckBox(
             dc_row, checked=bool(dc.get("enabled", False)),
             size=18, bg=C["card"])
         self._dc_enabled_cb.pack(side="left", padx=(0, 10))
-        tk.Label(dc_row, text="Enable Discord webhook",
+        tk.Label(dc_row, text=t("settings.notif.dc_enable"),
                  bg=C["card"], fg=C["ink"],
                  font=F("body", 10, "bold")).pack(side="left")
 
         self._dc_webhook_entry = _labeled_entry(
-            inner, "Webhook URL", dc.get("webhook_url", ""), show="•")
+            inner, t("settings.notif.dc_url"),
+            dc.get("webhook_url", ""), show="•")
 
         dc_test = tk.Frame(inner, bg=C["card"])
         dc_test.pack(fill="x", pady=(0, 6))
-        RoundedButton(dc_test, "Send test message", self._test_discord,
+        RoundedButton(dc_test, t("btn.send_test"), self._test_discord,
                        kind="secondary", size="sm").pack(side="left")
         self._dc_status = tk.Label(dc_test, text="",
                                       bg=C["card"], fg=C["ink3"],
@@ -1535,8 +1551,7 @@ class TelegramTab(tk.Frame):
         self._dc_status.pack(side="left", padx=(10, 0))
 
         tk.Label(inner,
-                 text="Channel → Settings → Integrations → Webhooks → "
-                       "New Webhook → Copy URL.",
+                 text=t("settings.notif.dc_hint"),
                  bg=C["card"], fg=C["ink3"], font=F("mono", 9),
                  wraplength=520, justify="left",
                  anchor="w").pack(fill="x", pady=(4, 14))
@@ -1556,41 +1571,41 @@ class TelegramTab(tk.Frame):
         token = self._tg_token_entry.get().strip()
         chat = self._tg_chat_entry.get().strip()
         if not token or not chat:
-            self._tg_status.config(text="Token + Chat ID required.",
+            self._tg_status.config(text=t("settings.notif.tg_err.required"),
                                      fg=C["err"])
             return
-        self._tg_status.config(text="Sending…", fg=C["ink3"])
+        self._tg_status.config(text=t("settings.notif.tg_sending"),
+                                 fg=C["ink3"])
         threading.Thread(target=self._test_tg_thread,
                          args=(token, chat), daemon=True).start()
 
     def _test_tg_thread(self, token, chat):
         from ..services.telegram import TelegramClient
         c = TelegramClient(bot_token=token, chat_id=chat, enabled=True)
-        ok = c.send_text(
-            "🎉 Test from NoteNara — your Telegram setup works!")
+        ok = c.send_text(t("settings.notif.test_tg_body"))
         self.after(0, lambda: self._tg_status.config(
-            text="✓ Sent — check your chat." if ok
-                  else "✗ Failed — check token / chat ID.",
+            text=t("settings.notif.tg_ok") if ok
+                  else t("settings.notif.tg_err"),
             fg=C["ok"] if ok else C["err"]))
 
     def _test_discord(self):
         url = self._dc_webhook_entry.get().strip()
         if not url:
-            self._dc_status.config(text="Webhook URL required.",
+            self._dc_status.config(text=t("settings.notif.dc_err.required"),
                                      fg=C["err"])
             return
-        self._dc_status.config(text="Sending…", fg=C["ink3"])
+        self._dc_status.config(text=t("settings.notif.dc_sending"),
+                                 fg=C["ink3"])
         threading.Thread(target=self._test_dc_thread,
                          args=(url,), daemon=True).start()
 
     def _test_dc_thread(self, url):
         from ..services.discord import DiscordClient
         c = DiscordClient(webhook_url=url, enabled=True)
-        ok = c.send_text(
-            "🎉 **Test from NoteNara** — your Discord webhook works!")
+        ok = c.send_text(t("settings.notif.test_dc_body"))
         self.after(0, lambda: self._dc_status.config(
-            text="✓ Sent — check your channel." if ok
-                  else "✗ Failed — check webhook URL.",
+            text=t("settings.notif.dc_ok") if ok
+                  else t("settings.notif.dc_err"),
             fg=C["ok"] if ok else C["err"]))
 
     def commit(self):
@@ -1615,7 +1630,7 @@ class OutputTab(tk.Frame):
         body = tk.Frame(self, bg=C["card"])
         body.pack(fill="both", expand=True, padx=12, pady=12)
 
-        _section_label(body, "Transcript output folder")
+        _section_label(body, t("settings.output.folder"))
         path_inp = SmoothInput(body, height=34, radius=11, bg=C["card"])
         path_inp.pack(fill="x", pady=(0, 6))
         path_inp.set(cfg.get("output_dir", "./output"))
@@ -1623,15 +1638,15 @@ class OutputTab(tk.Frame):
 
         browse_row = tk.Frame(body, bg=C["card"])
         browse_row.pack(fill="x", pady=(0, 4))
-        RoundedButton(browse_row, "Browse folder…", self._browse,
+        RoundedButton(browse_row, t("btn.browse"), self._browse,
                        kind="secondary", size="sm").pack(side="left")
         tk.Label(body,
-                 text="Relative paths resolve against the project root.",
+                 text=t("settings.output.folder_hint"),
                  bg=C["card"], fg=C["ink3"], font=F("mono", 9),
                  anchor="w").pack(fill="x", pady=(6, 20))
 
         # Auto-open Notion — SmoothCheckBox + label row
-        _section_label(body, "After-completion")
+        _section_label(body, t("settings.output.after"))
         toggle_row = tk.Frame(body, bg=C["card"])
         toggle_row.pack(fill="x", pady=(0, 4))
         self._auto_open_cb = SmoothCheckBox(toggle_row,
@@ -1639,12 +1654,11 @@ class OutputTab(tk.Frame):
                                                 size=18, bg=C["card"])
         self._auto_open_cb.pack(side="left", padx=(0, 10))
         tk.Label(toggle_row,
-                 text="Auto-open Notion page in browser when done",
+                 text=t("settings.output.auto_open"),
                  bg=C["card"], fg=C["ink"], font=F("body", 10),
                  anchor="w").pack(side="left", fill="x", expand=True)
         tk.Label(body,
-                 text="When off, a clickable button appears in the main view "
-                       "so you can open the page manually.",
+                 text=t("settings.output.auto_open_hint"),
                  bg=C["card"], fg=C["ink3"], font=F("mono", 9),
                  wraplength=320, justify="left",
                  anchor="w").pack(fill="x", pady=(4, 20))
@@ -1653,10 +1667,10 @@ class OutputTab(tk.Frame):
         # Drives UI labels, Notion headings, month abbreviations. LLM summary
         # output language is auto-detected from the transcript regardless of
         # this setting (Indonesian audio → Indonesian summary, etc.).
-        _section_label(body, "Interface language")
+        _section_label(body, t("settings.output.lang"))
         self.LANG_OPTIONS = [
-            ("English",     "en"),
-            ("Bahasa Indonesia", "id"),
+            (t("settings.output.lang_en"), "en"),
+            (t("settings.output.lang_id"), "id"),
         ]
         lang_labels = [lbl for lbl, _ in self.LANG_OPTIONS]
         current_code = (cfg.get("language") or "en").lower()
@@ -1668,15 +1682,13 @@ class OutputTab(tk.Frame):
             height=34, radius=11, bg=C["card"])
         self._lang_dd.pack(fill="x", pady=(0, 4))
         tk.Label(body,
-                 text="Changes the app UI + Notion page headings. "
-                       "Meeting summary itself still follows the audio "
-                       "language. Restart NoteNara to apply.",
+                 text=t("settings.output.lang_hint"),
                  bg=C["card"], fg=C["ink3"], font=F("mono", 9),
                  wraplength=520, justify="left",
                  anchor="w").pack(fill="x", pady=(0, 0))
 
     def _browse(self):
-        d = filedialog.askdirectory(title="Pick output folder")
+        d = filedialog.askdirectory(title=t("file_dialog.pick_output"))
         if d:
             self._path_entry.delete(0, "end")
             self._path_entry.insert(0, d)

@@ -301,9 +301,10 @@ class App(_Base):  # type: ignore[misc, valid-type]
                                   before=self._brand_frame)
         else:
             self._back_btn.pack_forget()
-        # Title
+        # Title — if it looks like an i18n key, translate; otherwise show as-is.
         if view.title:
-            self._title_label.config(text=view.title)
+            label = t(view.title) if "." in view.title else view.title
+            self._title_label.config(text=label)
             self._version_label.pack_forget()
         else:
             self._title_label.config(text=APP_NAME)
@@ -458,7 +459,7 @@ class WelcomeView(BaseView):
         # Hero mark — large NoteNara logo (user-designed rounded-square N)
         BrandLogo(body, size=96, bg=C["card"]).pack()
 
-        tk.Label(body, text="Welcome to",
+        tk.Label(body, text=t("welcome.welcome_to"),
                  bg=C["card"], fg=C["ink2"],
                  font=F("body", 11)).pack(pady=(24, 0))
         tk.Label(body, text=APP_NAME,
@@ -469,12 +470,9 @@ class WelcomeView(BaseView):
                  font=F("body", 11)).pack(pady=(2, 28))
 
         steps = [
-            ("1", "Drop your meeting recording",
-             "audio · video — mp4, mp3, wav, m4a, mov…"),
-            ("2", "Review the auto-summary",
-             "edit anything before publishing"),
-            ("3", "Copy it — or send it to Notion",
-             "workspace setup is asked on demand"),
+            ("1", t("welcome.step1.title"), t("welcome.step1.desc")),
+            ("2", t("welcome.step2.title"), t("welcome.step2.desc")),
+            ("3", t("welcome.step3.title"), t("welcome.step3.desc")),
         ]
         for num, title, desc in steps:
             row = tk.Frame(body, bg=C["card"])
@@ -491,9 +489,10 @@ class WelcomeView(BaseView):
         # Footer
         footer = tk.Frame(body, bg=C["card"])
         footer.pack(fill="x", side="bottom", pady=(28, 0))
-        RoundedButton(footer, "Skip", lambda: self.app.navigate("main", push=False),
+        RoundedButton(footer, t("btn.skip"),
+                     lambda: self.app.navigate("main", push=False),
                      kind="ghost", size="md").pack(side="left")
-        RoundedButton(footer, "Get started  →",
+        RoundedButton(footer, t("btn.get_started"),
                      lambda: self._start(), kind="primary",
                      size="lg").pack(side="right")
 
@@ -525,7 +524,8 @@ class MainView(BaseView):
         self._bottom_region = tk.Frame(body, bg=C["card"])
         self._bottom_region.pack(side="bottom", fill="x")
 
-        self._recent_label = OrnamentLabel(self._bottom_region, "recent")
+        self._recent_label = OrnamentLabel(self._bottom_region,
+                                              t("main.ornament.recent"))
         self._recent_label.pack(fill="x", pady=(0, 8))
         self._recent_holder = tk.Frame(self._bottom_region, bg=C["card"])
         self._recent_holder.pack(fill="x")
@@ -541,7 +541,7 @@ class MainView(BaseView):
 
         # Short description — single small line above drop zone
         tk.Label(self._idle_frame,
-                 text="Drop a recording — get a clean summary in seconds. Local & private.",
+                 text=t("main.tagline"),
                  bg=C["card"], fg=C["ink3"],
                  font=F("mono", 9),
                  anchor="w", wraplength=460,
@@ -565,7 +565,8 @@ class MainView(BaseView):
         self._log_widget = TerminalLog(self._proc_frame)
         self._log_widget.pack(fill="both", expand=True)
         self._cancel_btn_row = tk.Frame(self._proc_frame, bg=C["card"])
-        self._cancel_btn = RoundedButton(self._cancel_btn_row, "Cancel",
+        self._cancel_btn = RoundedButton(self._cancel_btn_row,
+                                            t("main.cancel_processing"),
                                             self._cancel_processing,
                                             kind="secondary", size="md")
 
@@ -625,7 +626,7 @@ class MainView(BaseView):
 
         # Start transcription button — full-width primary, smooth pill
         self._start_btn = RoundedButton(
-            self._loaded_frame, "Start transcription  →",
+            self._loaded_frame, t("btn.start_transcription"),
             self._start, kind="primary", size="lg", stretch=True)
         self._start_btn.pack(fill="x")
 
@@ -634,7 +635,7 @@ class MainView(BaseView):
         self._loaded_frame.pack_forget()
         if not self._proc_frame.winfo_ismapped():
             self._proc_frame.pack(fill="both", expand=True)
-        self._phase_chip.show("Starting…")
+        self._phase_chip.show(t("phase.starting"))
         self._cancel_btn_row.pack(fill="x", pady=(8, 0))
         self._cancel_btn.pack(side="right")
         self._progress.set_progress(0)
@@ -739,7 +740,7 @@ class MainView(BaseView):
         # after this, the hang is somewhere in service construction or the
         # Whisper model load.
         log(f"▶ Pipeline started · {file_path.name}", "info")
-        self.after(0, lambda: self._phase_chip.show("Loading services…"))
+        self.after(0, lambda: self._phase_chip.show(t("phase.loading_services")))
 
         cfg = self.app.cfg
         llm_cfg = cfg.get("llm", {})
@@ -834,7 +835,7 @@ class MainView(BaseView):
 # ============================================================================
 
 class PreviewView(BaseView):
-    title = "Review"
+    title = "preview.title"
     can_go_back = True
 
     def __init__(self, parent, app):
@@ -889,13 +890,13 @@ class PreviewView(BaseView):
     def _build_footer(self):
         row = tk.Frame(self._footer, bg=C["card"])
         row.pack(fill="x", padx=20, pady=12)
-        RoundedButton(row, "Copy markdown", self._copy_md,
+        RoundedButton(row, t("btn.copy_markdown"), self._copy_md,
                        kind="secondary", size="sm").pack(side="left", padx=(0, 6))
-        RoundedButton(row, "Copy plain", self._copy_plain,
+        RoundedButton(row, t("btn.copy_plain"), self._copy_plain,
                        kind="secondary", size="sm").pack(side="left", padx=6)
-        RoundedButton(row, "View log", self._view_log,
+        RoundedButton(row, t("btn.view_log"), self._view_log,
                        kind="ghost", size="sm").pack(side="left", padx=6)
-        RoundedButton(row, "Send to Notion  →", self._send_to_notion,
+        RoundedButton(row, t("btn.send_to_notion"), self._send_to_notion,
                        kind="primary", size="md").pack(side="right")
 
     def _view_log(self):
@@ -934,22 +935,21 @@ class PreviewView(BaseView):
         summary = self.app._summary
         kp = len(summary.key_points) if summary else 0
         ai_n = len(summary.action_items) if summary else 0
-        meta = f"{chars} chars  ·  {kp} key points  ·  {ai_n} action items"
+        meta = t("preview.meta_format", chars=chars, kp=kp, ai=ai_n)
         if summary and getattr(summary, "truncated", False):
-            meta += "  ·  truncated"
+            meta += "  ·  " + t("preview.truncated")
         tk.Label(head, text=meta, bg=C["card"], fg=C["ink3"],
                  font=F("mono", 9), anchor="w").pack(fill="x", pady=(4, 0))
 
         if summary is None:
             # LLM failed — show only transcript + manual options
             tk.Label(inner,
-                     text="No summary available (LLM unreachable).",
+                     text=t("preview.no_summary"),
                      bg=C["card"], fg=C["warn"],
                      font=F("body", 11), anchor="w").pack(
                 fill="x", padx=24, pady=(14, 6))
             tk.Label(inner,
-                     text="The transcript is saved locally. Open Settings → AI "
-                           "model to fix the connection, then try again.",
+                     text=t("preview.no_summary_hint"),
                      bg=C["card"], fg=C["ink2"],
                      font=F("body", 10), wraplength=480, justify="left",
                      anchor="w").pack(fill="x", padx=24, pady=(0, 14))
@@ -973,8 +973,8 @@ class PreviewView(BaseView):
 
     def _populate_keypoints_section(self, inner, summary):
         n = len(summary.key_points)
-        _ornament_label(inner, f"key points · {n}").pack(fill="x", padx=24,
-                                                            pady=(18, 8))
+        _ornament_label(inner, t("preview.ornament.key_points", n=n)).pack(
+            fill="x", padx=24, pady=(18, 8))
         card = _card(inner)
         card.pack(fill="x", padx=24)
         self._keypoints_widgets = []
@@ -983,8 +983,8 @@ class PreviewView(BaseView):
 
     def _populate_actions_section(self, inner, summary):
         n = len(summary.action_items)
-        _ornament_label(inner, f"action items · {n}").pack(fill="x", padx=24,
-                                                                pady=(18, 8))
+        _ornament_label(inner, t("preview.ornament.action_items", n=n)).pack(
+            fill="x", padx=24, pady=(18, 8))
         card = _card(inner)
         card.pack(fill="x", padx=24)
         self._action_widgets = []
@@ -992,8 +992,8 @@ class PreviewView(BaseView):
             self._add_action_row(card.inner, ai, self._action_widgets)
 
     def _populate_raw_section(self, inner):
-        _ornament_label(inner, "raw transcript").pack(fill="x", padx=24,
-                                                          pady=(18, 8))
+        _ornament_label(inner, t("preview.ornament.raw")).pack(
+            fill="x", padx=24, pady=(18, 8))
         card = _card(inner)
         card.pack(fill="x", padx=24, pady=(0, 24))
         # Just show first ~280 chars + size; full text in the local file
@@ -1005,7 +1005,8 @@ class PreviewView(BaseView):
                  anchor="w").pack(fill="x", pady=(0, 6))
         if self.app._transcript_path:
             tk.Label(card.inner,
-                     text=f"full → {self.app._transcript_path.name}",
+                     text=t("preview.raw.full_link",
+                            name=self.app._transcript_path.name),
                      bg=C["card"], fg=C["ink3"],
                      font=F("mono", 9), anchor="w").pack(fill="x")
 
@@ -1108,7 +1109,7 @@ class PreviewView(BaseView):
 # ============================================================================
 
 class NotionSetupView(BaseView):
-    title = "Send to Notion"
+    title = "notion_setup.title"
     can_go_back = True
 
     def __init__(self, parent, app):
@@ -1121,21 +1122,22 @@ class NotionSetupView(BaseView):
         body = tk.Frame(self, bg=C["card"])
         body.pack(fill="both", expand=True, padx=26, pady=(16, 20))
 
-        tk.Label(body, text="workspace · target · project · topic",
+        tk.Label(body, text=t("notion_setup.crumb"),
                  bg=C["card"], fg=C["ink3"],
                  font=F("mono", 9), anchor="w").pack(fill="x", pady=(0, 14))
 
         # Workspace dropdown
-        self._field_label(body, "Workspace")
-        self._workspace_dd = SmoothDropdown(body, values=[],
-                                                placeholder="Select workspace…",
+        self._field_label(body, t("notion_setup.workspace"))
+        self._workspace_dd = SmoothDropdown(
+            body, values=[],
+            placeholder=t("notion_setup.workspace_placeholder"),
                                                 on_change=self._on_workspace_change_v,
                                                 height=36, radius=12,
                                                 bg=C["card"])
         self._workspace_dd.pack(fill="x", pady=(0, 14))
 
         # Target DB display — rounded card, not raw label box
-        self._field_label(body, "Target database")
+        self._field_label(body, t("notion_setup.target_db"))
         self._target_card = SmoothCard(body, radius=12, padding=12,
                                           bg=C["card"])
         self._target_card.pack(fill="x", pady=(0, 14))
@@ -1145,17 +1147,18 @@ class NotionSetupView(BaseView):
         self._target_label.pack(fill="x")
 
         # Project (optional)
-        self._field_label(body, "Project   optional")
-        self._project_dd = SmoothDropdown(body, values=["(no project)"],
-                                              initial="(no project)",
-                                              on_change=lambda v: self._refresh_preview(),
-                                              placeholder="(no project)",
+        self._field_label(body, t("notion_setup.project"))
+        self._project_dd = SmoothDropdown(
+            body, values=[t("notion_setup.project_none")],
+            initial=t("notion_setup.project_none"),
+            on_change=lambda v: self._refresh_preview(),
+            placeholder=t("notion_setup.project_none"),
                                               height=36, radius=12,
                                               bg=C["card"])
         self._project_dd.pack(fill="x", pady=(0, 14))
 
         # Topic
-        self._field_label(body, t("notion_setup.label.topic"))
+        self._field_label(body, t("notion_setup.topic"))
         self._topic_input = SmoothInput(body, placeholder="",
                                            height=38, radius=12,
                                            bg=C["card"])
@@ -1165,7 +1168,7 @@ class NotionSetupView(BaseView):
         # Meeting date — overridable. Defaults to the recording's mtime so a
         # transcript of yesterday's meeting doesn't get filed under today.
         # ISO format (YYYY-MM-DD); shown in title preview after parsing.
-        self._field_label(body, "Meeting date   YYYY-MM-DD")
+        self._field_label(body, t("notion_setup.date"))
         self._date_input = SmoothInput(body, placeholder="2026-05-26",
                                           height=38, radius=12,
                                           bg=C["card"])
@@ -1180,7 +1183,7 @@ class NotionSetupView(BaseView):
         # Title preview as SmoothCard with soft tint
         prev_card = SmoothCard(body, radius=12, padding=12, bg=C["card"])
         prev_card.pack(fill="x", pady=(0, 14))
-        tk.Label(prev_card.inner, text="PAGE TITLE PREVIEW",
+        tk.Label(prev_card.inner, text=t("notion_setup.preview_label"),
                  bg=C["card"], fg=C["ink3"],
                  font=F("mono", 9), anchor="w").pack(fill="x", pady=(0, 4))
         self._title_preview = tk.Label(prev_card.inner, text="—",
@@ -1205,9 +1208,9 @@ class NotionSetupView(BaseView):
         footer.pack(fill="x", side="bottom")
         row = tk.Frame(footer, bg=C["card"])
         row.pack(fill="x", padx=20, pady=12)
-        RoundedButton(row, "Back", lambda: self.app.go_back(),
+        RoundedButton(row, t("btn.back"), lambda: self.app.go_back(),
                        kind="secondary", size="md").pack(side="left")
-        self._publish_btn = RoundedButton(row, "Publish to Notion",
+        self._publish_btn = RoundedButton(row, t("btn.publish"),
                                               self._publish, kind="primary",
                                               size="md")
         self._publish_btn.pack(side="right")
@@ -1259,9 +1262,10 @@ class NotionSetupView(BaseView):
             return
         profile = self.app.cfg["profiles"][slug]
         db_id = profile.get("target_db_id", "")
-        self._target_label.config(text=db_id or "(no database configured)")
-        self._project_dd.set_values(["(no project)"])
-        self._project_dd.set("(no project)")
+        self._target_label.config(
+            text=db_id or t("notion_setup.target_db_empty"))
+        self._project_dd.set_values([t("notion_setup.project_none")])
+        self._project_dd.set(t("notion_setup.project_none"))
         threading.Thread(target=self._fetch_projects_thread,
                          args=(profile,), daemon=True).start()
         threading.Thread(target=self._fetch_db_name_thread,
@@ -1282,11 +1286,12 @@ class NotionSetupView(BaseView):
                 pages = client.search_pages_excluding_db(
                     profile.get("target_db_id", ""))
             self._projects = pages
-            titles = ["(no project)"] + [p.title for p in pages]
+            titles = [t("notion_setup.project_none")] + [p.title for p in pages]
             self.after(0, lambda: self._project_dd.set_values(titles))
         except Exception as e:
             self.after(0, lambda: self._status.config(
-                text=f"Projects fetch failed: {str(e)[:60]}", fg=C["err"]))
+                text=t("notion_setup.err.projects_fail", msg=str(e)[:60]),
+                fg=C["err"]))
 
     def _fetch_db_name_thread(self, profile):
         try:
@@ -1304,12 +1309,12 @@ class NotionSetupView(BaseView):
 
     def _refresh_preview(self):
         project = self._project_dd.get().strip()
-        if project == "(no project)":
+        if project == t("notion_setup.project_none"):
             project = ""
         materi = self._topic_entry.get().strip()
         date_iso = self._validated_date()
         title = format_page_title(project, materi, date_iso)
-        self._title_preview.config(text=title or "(empty title)")
+        self._title_preview.config(text=title or t("notion_setup.empty_title"))
 
     def _validated_date(self) -> str:
         """Returns a valid ISO date string from the date field.
@@ -1325,8 +1330,7 @@ class NotionSetupView(BaseView):
             return d.isoformat()
         except ValueError:
             self._date_hint.config(
-                text="Invalid date — using today instead.",
-                fg=C["warn"])
+                text=t("notion_setup.date_invalid"), fg=C["warn"])
             return today_iso()
 
     def _publish(self):
@@ -1334,16 +1338,16 @@ class NotionSetupView(BaseView):
             return
         materi = self._topic_entry.get().strip()
         if not materi:
-            self._status.config(text=t("notion_setup.error.no_topic"),
+            self._status.config(text=t("notion_setup.err.no_topic"),
                                   fg=C["err"])
             return
         project = self._project_dd.get().strip()
-        if project == "(no project)":
+        if project == t("notion_setup.project_none"):
             project = ""
 
         slug = self._slug_for(self._workspace_dd.get())
         if not slug:
-            self._status.config(text=t("notion_setup.error.no_workspace"),
+            self._status.config(text=t("notion_setup.err.no_workspace"),
                                   fg=C["err"])
             return
         profile = self.app.cfg["profiles"][slug]
@@ -1357,8 +1361,8 @@ class NotionSetupView(BaseView):
             date_iso=self._validated_date())
 
         self.app._processing = True
-        self._publish_btn.configure(state="disabled", text="Publishing…")
-        self._status.config(text="Publishing to Notion…", fg=C["ink2"])
+        self._publish_btn.configure(state="disabled", text=t("btn.publishing"))
+        self._status.config(text=t("notion_setup.publishing"), fg=C["ink2"])
 
         threading.Thread(target=self._publish_thread,
                          args=(inputs, profile), daemon=True).start()
@@ -1408,7 +1412,7 @@ class NotionSetupView(BaseView):
 
     def _on_publish_done(self, page: CreatedPage):
         self.app._processing = False
-        self._publish_btn.configure(state="normal", text="Publish to Notion")
+        self._publish_btn.configure(state="normal", text=t("btn.publish"))
         # Optionally auto-open
         if self.app.cfg.get("auto_open_notion", False) and page.url:
             webbrowser.open(page.url)
@@ -1416,7 +1420,7 @@ class NotionSetupView(BaseView):
 
     def _on_publish_failed(self, err: str):
         self.app._processing = False
-        self._publish_btn.configure(state="normal", text="Publish to Notion")
+        self._publish_btn.configure(state="normal", text=t("btn.publish"))
         self._status.config(text=f"✗ {err[:80]}", fg=C["err"])
 
 
@@ -1439,7 +1443,7 @@ class DoneView(BaseView):
         # Smooth done mark
         SmoothCheckMark(body, size=96, bg=C["card"]).pack()
 
-        tk.Label(body, text="Saved to Notion",
+        tk.Label(body, text=t("done.title"),
                  bg=C["card"], fg=C["ink"],
                  font=F("display", 28, italic=True)).pack(pady=(20, 4))
         self._meta = tk.Label(body, text="", bg=C["card"], fg=C["ink3"],
@@ -1448,7 +1452,7 @@ class DoneView(BaseView):
 
         card = SmoothCard(body, radius=18, padding=16, bg=C["card"])
         card.pack(fill="x")
-        tk.Label(card.inner, text="PAGE TITLE",
+        tk.Label(card.inner, text=t("done.page_title_label"),
                  bg=C["card"], fg=C["ink3"],
                  font=F("mono", 9), anchor="w").pack(fill="x", pady=(0, 4))
         self._title_label = tk.Label(card.inner, text="—",
@@ -1459,7 +1463,7 @@ class DoneView(BaseView):
         self._title_label.pack(fill="x", pady=(0, 12))
         tk.Frame(card.inner, height=1, bg=C["border_soft"]).pack(
             fill="x", pady=(0, 12))
-        RoundedButton(card.inner, "Open in Notion  ↗", self._open_page,
+        RoundedButton(card.inner, t("btn.open_in_notion"), self._open_page,
                        kind="primary", size="md", stretch=True).pack(fill="x")
 
         # Side row — primary action is "Back to home" so the user lands on
@@ -1467,12 +1471,12 @@ class DoneView(BaseView):
         # secondary ghost buttons.
         side = tk.Frame(body, bg=C["card"])
         side.pack(fill="x", pady=(18, 0))
-        RoundedButton(side, "← Back to home",
+        RoundedButton(side, t("btn.back_to_home"),
                        self._new_run, kind="secondary",
                        size="md").pack(side="left")
-        RoundedButton(side, "Copy link", self._copy_link,
+        RoundedButton(side, t("btn.copy_link"), self._copy_link,
                        kind="ghost", size="md").pack(side="left", padx=8)
-        RoundedButton(side, "View log", self._view_log,
+        RoundedButton(side, t("btn.view_log"), self._view_log,
                        kind="ghost", size="md").pack(side="left", padx=(0, 0))
 
     def _view_log(self):
@@ -1488,8 +1492,9 @@ class DoneView(BaseView):
             self._title_label.config(text=page.url.split("/")[-1].replace("-", " ")[:120])
         s = self.app._summary
         if s:
-            self._meta.config(text=f"{len(s.key_points)} key points · "
-                                     f"{len(s.action_items)} action items")
+            self._meta.config(text=t("done.meta_format",
+                                       kp=len(s.key_points),
+                                       ai=len(s.action_items)))
         else:
             self._meta.config(text="")
 

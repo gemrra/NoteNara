@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Callable, Optional
 
 from ..constants import C, F
-from ..i18n import months as i18n_months
+from ..i18n import t, months as i18n_months
 from .widgets import HAS_DND, MEDIA_EXTS
 from .smooth import (
     HeaderSmoothIconButton, RoundedButton, SmoothChip, SmoothCircleIcon,
@@ -126,13 +126,13 @@ class RetroDropZone(tk.Frame):
         self._circle.pack(pady=(0, 14))
 
         # Title
-        self._title_label = tk.Label(self._content, text="Drop a recording",
+        self._title_label = tk.Label(self._content, text=t("main.dropzone.title"),
                                        bg=C["card"], fg=C["ink"],
                                        font=F("display", 24, italic=True))
         self._title_label.pack()
 
         # Subtitle
-        self._sub_label = tk.Label(self._content, text="or click to browse",
+        self._sub_label = tk.Label(self._content, text=t("main.dropzone.subtitle"),
                                      bg=C["card"], fg=C["ink2"],
                                      font=F("body", 11))
         self._sub_label.pack(pady=(6, 14))
@@ -344,7 +344,7 @@ class RecentItem(tk.Frame):
                  bg=C["bg2"], fg=C["ink3"],
                  font=F("mono", 9), anchor="w").pack(fill="x", pady=(1, 0))
 
-        open_btn = RoundedButton(inner, "Open", on_open,
+        open_btn = RoundedButton(inner, t("main.recent.open"), on_open,
                                    kind="secondary", size="sm",
                                    bg=C["bg2"],
                                    hover_fill=C["yellow"])
@@ -366,7 +366,7 @@ class RecentList(tk.Frame):
                                   fill=C["bg2"], border=C["border_soft"],
                                   border_width=1, bg=bg)
             empty.pack(fill="x")
-            tk.Label(empty.inner, text="No recent transcriptions yet.",
+            tk.Label(empty.inner, text=t("main.recent.empty"),
                      bg=C["bg2"], fg=C["ink3"],
                      font=F("mono", 9)).pack()
             return

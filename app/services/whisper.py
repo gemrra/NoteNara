@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Callable, Optional
 
 from ..constants import DEFAULT_MODEL_DIR, VENV_NVIDIA_DIR
+from ..i18n import t
 
 
 # ---------- CUDA setup ----------
@@ -143,7 +144,7 @@ class WhisperService:
             if self._model is not None:
                 return
             if on_progress:
-                on_progress(0.0, f"Loading Whisper {self.model_name}…")
+                on_progress(0.0, t("phase.loading_whisper", name=self.model_name))
 
             import time
             stop_hb = threading.Event()
@@ -153,9 +154,12 @@ class WhisperService:
                 while not stop_hb.wait(2):
                     elapsed = int(time.time() - start_t)
                     if on_progress:
-                        msg = f"Loading Whisper {self.model_name}… {elapsed}s"
                         if elapsed >= 30:
-                            msg += " (check GPU memory — close LM Studio?)"
+                            msg = t("phase.loading_whisper_hint",
+                                    name=self.model_name, sec=elapsed)
+                        else:
+                            msg = t("phase.loading_whisper_t",
+                                    name=self.model_name, sec=elapsed)
                         on_progress(0.0, msg)
 
             hb = threading.Thread(target=heartbeat, daemon=True)
@@ -192,7 +196,7 @@ class WhisperService:
         assert self._model is not None
 
         if on_progress:
-            on_progress(0.0, "Starting transcription…")
+            on_progress(0.0, t("phase.starting"))
 
         segments_iter, info = self._model.transcribe(
             str(file_path),
@@ -221,12 +225,12 @@ class WhisperService:
             ))
             if on_progress:
                 pct = min(100.0, (seg.end / duration) * 100.0)
-                on_progress(pct, f"Transcribing… {pct:.0f}%")
+                on_progress(pct, t("phase.transcribing", pct=pct))
 
         text = " ".join(s.text.strip() for s in segments).strip()
 
         if on_progress:
-            on_progress(100.0, "Transcription complete.")
+            on_progress(100.0, t("phase.transcription_done"))
 
         return TranscriptResult(
             text=text,

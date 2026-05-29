@@ -13,6 +13,7 @@ import os
 import tkinter as tk
 
 from ..constants import C, F, FONTS, LOGS_DIR
+from ..i18n import t
 
 try:
     from tkinterdnd2 import DND_FILES  # noqa: F401  (re-exported by retro.py)
@@ -162,21 +163,21 @@ class TerminalLog(tk.Frame):
         hdr.pack(fill="x")
         hdr.pack_propagate(False)
 
-        tk.Label(hdr, text="LOG", bg=C["bg_field2"], fg=C["text2"],
+        tk.Label(hdr, text=t("log.header"), bg=C["bg_field2"], fg=C["text2"],
                  font=("Consolas", 8, "bold")).pack(side="left", padx=(12, 6))
         tk.Label(hdr, text="·", bg=C["bg_field2"], fg=C["text3"],
                  font=("Consolas", 8)).pack(side="left", padx=(0, 6))
-        tk.Label(hdr, text="STDOUT", bg=C["bg_field2"], fg=C["text3"],
+        tk.Label(hdr, text=t("log.stdout"), bg=C["bg_field2"], fg=C["text3"],
                  font=("Consolas", 8)).pack(side="left")
 
         # Right-side cluster: open-file + clear + line counter
         right = tk.Frame(hdr, bg=C["bg_field2"])
         right.pack(side="right", padx=(0, 12))
 
-        self._counter_var = tk.StringVar(value="0 lines")
+        self._counter_var = tk.StringVar(value=t("log.lines", n=0, s=""))
         tk.Label(right, textvariable=self._counter_var, bg=C["bg_field2"],
                  fg=C["text3"], font=("Consolas", 8)).pack(side="right")
-        clear_btn = tk.Label(right, text="clear",
+        clear_btn = tk.Label(right, text=t("log.clear"),
                               bg=C["bg_field2"], fg=C["text3"],
                               font=("Consolas", 8), cursor="hand2")
         clear_btn.pack(side="right", padx=(0, 10))
@@ -185,7 +186,7 @@ class TerminalLog(tk.Frame):
         clear_btn.bind("<Leave>", lambda e: clear_btn.config(fg=C["text3"]))
 
         if self._log_file_path is not None:
-            open_btn = tk.Label(right, text="open log",
+            open_btn = tk.Label(right, text=t("log.open"),
                                  bg=C["bg_field2"], fg=C["text3"],
                                  font=("Consolas", 8), cursor="hand2")
             open_btn.pack(side="right", padx=(0, 10))
@@ -225,7 +226,7 @@ class TerminalLog(tk.Frame):
     def _show_cursor(self):
         self._text.configure(state="normal")
         self._text.insert("end", "$ ", "prompt")
-        self._text.insert("end", "awaiting input…", "dim")
+        self._text.insert("end", t("log.awaiting"), "dim")
         self._text.configure(state="disabled")
 
     def clear(self):
@@ -233,7 +234,7 @@ class TerminalLog(tk.Frame):
         self._text.delete("1.0", "end")
         self._text.configure(state="disabled")
         self._lines = 0
-        self._counter_var.set("0 lines")
+        self._counter_var.set(t("log.lines", n=0, s=""))
         self._show_cursor()
 
     def log(self, msg: str, kind: str = "info"):
@@ -256,15 +257,16 @@ class TerminalLog(tk.Frame):
         def _do():
             self._text.configure(state="normal")
             content = self._text.get("1.0", "end-1c")
-            if "awaiting input" in content and self._lines == 0:
+            if t("log.awaiting") in content and self._lines == 0:
                 self._text.delete("1.0", "end")
             self._text.insert("end", f"[{ts}] ", "dim")
             self._text.insert("end", f"{msg}\n", kind)
             self._text.see("end")
             self._text.configure(state="disabled")
             self._lines += 1
-            self._counter_var.set(
-                f"{self._lines} line{'s' if self._lines != 1 else ''}")
+            self._counter_var.set(t(
+                "log.lines", n=self._lines,
+                s="s" if self._lines != 1 else ""))
         self.after(0, _do)
 
     def _open_log_file(self):
