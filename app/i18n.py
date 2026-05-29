@@ -244,7 +244,7 @@ STRINGS: dict[str, dict[str, str]] = {
         "settings.output.auto_open":            "Auto-open Notion page in browser when done",
         "settings.output.auto_open_hint":       "When off, a clickable button appears in the main view so you can open the page manually.",
         "settings.output.lang":                 "Interface language",
-        "settings.output.lang_hint":            "Changes the app UI + Notion page headings. Meeting summary itself still follows the audio language. Restart NoteNara to apply.",
+        "settings.output.lang_hint":            "Changes the app UI + Notion page headings. Meeting summary itself still follows the audio language. Applied immediately when you Save.",
         "settings.output.lang_en":              "English",
         "settings.output.lang_id":              "Bahasa Indonesia",
 
@@ -540,7 +540,7 @@ STRINGS: dict[str, dict[str, str]] = {
         "settings.output.auto_open":            "Buka Notion page otomatis di browser pas selesai",
         "settings.output.auto_open_hint":       "Kalau off, tombol clickable muncul di main view biar lu bisa buka manual.",
         "settings.output.lang":                 "Bahasa interface",
-        "settings.output.lang_hint":            "Ngubah UI app + heading Notion page. Ringkasan meeting tetep ngikut bahasa audio. Restart NoteNara biar berlaku.",
+        "settings.output.lang_hint":            "Ngubah UI app + heading Notion page. Ringkasan meeting tetep ngikut bahasa audio. Langsung kena pas lu klik Simpan.",
         "settings.output.lang_en":              "English",
         "settings.output.lang_id":              "Bahasa Indonesia",
 

@@ -381,6 +381,39 @@ class App(_Base):  # type: ignore[misc, valid-type]
         self._current_name = prev
         self._update_chrome()
 
+    def reload_locale(self, new_lang: str) -> None:
+        """Apply a language change without requiring a process restart.
+
+        Tk widgets bake their text at construction time, so to swap languages
+        live we destroy every view instance and rebuild them fresh under the
+        new locale. Chrome itself (logo, version) doesn't carry translated
+        text, but ``_update_chrome`` re-translates the active view's title
+        key on the next navigate() — so it picks up the new language too.
+
+        Call this AFTER persisting the new language to config; the caller
+        usually schedules it via after() so the current event handler can
+        unwind before we destroy ourselves.
+        """
+        from ..i18n import set_locale
+        set_locale(new_lang)
+
+        # Tear down every view. pack_forget first so geometry manager
+        # releases its hold; destroy then collects all child widgets.
+        for view in self._views.values():
+            try:
+                view.pack_forget()
+            except tk.TclError:
+                pass
+            view.destroy()
+        self._views.clear()
+        self._current_view = None
+        self._current_name = ""
+        self._nav_stack = []
+
+        # Rebuild everything from scratch with the new locale active.
+        self._build_views()
+        self.navigate("main", push=False)
+
     # ---------- session reset ----------
 
     def reset_session(self):

@@ -270,12 +270,20 @@ class SettingsView(tk.Frame):
         pass
 
     def _save(self):
+        old_lang = self.cfg.get("language", "en")
         for w in self._tab_widgets.values():
             if hasattr(w, "commit"):
                 w.commit()
         save_config(self.cfg)
+        new_lang = self.cfg.get("language", "en")
         self.app.on_settings_saved()
-        self.app.go_back()
+
+        if old_lang != new_lang:
+            # Schedule the rebuild via after() so the current event handler
+            # unwinds before reload_locale destroys SettingsView (us).
+            self.app.after(50, lambda: self.app.reload_locale(new_lang))
+        else:
+            self.app.go_back()
 
     def _cancel(self):
         self.app.go_back()
