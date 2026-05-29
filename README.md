@@ -1,22 +1,24 @@
 # NoteNara
 
-Local meeting transcription app untuk Windows. Drop audio/video meeting, otomatis di-transcribe pakai **Whisper turbo** (CUDA atau CPU), di-summarize sama LLM (lokal lewat **LM Studio**/**Ollama** atau cloud — **OpenAI**, **Anthropic**, **Gemini**, **DeepSeek**), terus auto-publish ke **Notion** sebagai meeting notes lengkap dengan key points + action items.
+Local meeting transcription app for Windows. Drop an audio/video recording, get it auto-transcribed with **Whisper turbo** (CUDA or CPU), summarized by an LLM of your choice — local (**LM Studio**, **Ollama**) or cloud (**OpenAI**, **Anthropic**, **Gemini**, **DeepSeek**) — and auto-published to **Notion** as a structured meeting note with key points and action items.
 
-**Local-first by default.** Gak butuh API key kalo pakai LM Studio. Transcript kamu gak keluar dari mesin sampai kamu sendiri yang publish ke Notion. Cloud LLM optional buat reasoning yang lebih dalam.
+**Local-first by default.** No API key required when using LM Studio. Your transcripts never leave your machine until you choose to publish them. Cloud LLMs are optional for deeper reasoning.
+
+**Bilingual UI.** Switch between English and Bahasa Indonesia from Settings → Output. The LLM summary stays in the language of the audio regardless of UI choice.
 
 ---
 
 ## ✨ Features
 
-- **Whisper turbo on CUDA** — transcribe meeting 1 jam dalam ~3 menit di GPU mid-range. CPU fallback otomatis kalo gak ada NVIDIA.
-- **6 LLM providers** — LM Studio, Ollama, OpenAI, Anthropic, Google Gemini, DeepSeek, atau Custom OpenAI-compatible endpoint
-- **Indonesian-aware prompt** — summary, key points, action items keluar dalam bahasa Indonesia
-- **Auto-publish Notion** — meeting notes lengkap (ringkasan, key points, action items, raw transcript di toggle)
-- **Multi-workspace** — switch antara Notion workspace (Personal / Client A / Client B) tanpa setup ulang
-- **Optional notifications** — kirim summary ke **Telegram** (bot) atau **Discord** (webhook) pas meeting kelar
-- **Drag & drop UI** — bukan teknikal tool, tinggal drop file. Smooth retro editorial style.
-- **In-app log viewer** — daily rotating log file di `logs/`, tombol "View log" di app
-- **Cancellable + retry-friendly** — pipeline graceful kalo ada step yang gagal (LLM down? transcript tetep ke-save lokal)
+- **Whisper turbo on CUDA** — transcribe a 1-hour meeting in ~3 minutes on a mid-range GPU. CPU fallback when no NVIDIA card is available.
+- **6 LLM providers** — LM Studio, Ollama, OpenAI, Anthropic, Google Gemini, DeepSeek, or any Custom OpenAI-compatible endpoint.
+- **Language-aware prompting** — the LLM keeps summary, key points, and action items in the same language as the transcript (Indonesian audio → Indonesian summary, English audio → English summary). No translation, no mismatched output.
+- **Auto-publish to Notion** — fully structured page with summary, key points, action items, and an optional collapsed raw transcript block.
+- **Multi-workspace** — switch between Notion workspaces (e.g., Personal / Client A / Client B) without re-configuring.
+- **Optional notifications** — push summaries to **Telegram** (bot) or **Discord** (webhook) when each meeting is finished.
+- **Drag & drop UI** — not a technical tool; just drop a file. Smooth retro editorial design built with Tkinter + Pillow.
+- **In-app log viewer** — daily rotating log file under `logs/` and a "View log" button in the app for quick triage.
+- **Cancellable + retry-friendly** — the pipeline degrades gracefully (LLM unreachable? The transcript is still saved locally and can be retried).
 
 ---
 
@@ -24,12 +26,12 @@ Local meeting transcription app untuk Windows. Drop audio/video meeting, otomati
 
 | | |
 |---|---|
-| **OS** | Windows 10/11 (tested) — Linux/Mac probably works, paths perlu adjustment |
-| **Python** | 3.10+ (3.12 recommended) |
-| **GPU** | NVIDIA dengan CUDA 12.x untuk Whisper turbo. Kalo gak ada GPU, switch ke CPU di Settings → Transcription → Hardware. |
-| **ffmpeg** | Buat video container support — install dan add ke PATH |
-| **LM Studio** | https://lmstudio.ai — opsional, kalo mau LLM lokal. Load satu chat model (Qwen 2.5 7B Instruct recommended). |
-| **Notion** | Bikin integration di https://www.notion.so/my-integrations dan share database ke integration tsb |
+| **OS** | Windows 10 / 11 (tested). Linux / macOS likely works but paths may need adjustment. |
+| **Python** | 3.10+ (3.12 recommended). |
+| **GPU** | NVIDIA with CUDA 12.x for Whisper turbo. If you don't have a GPU, switch to CPU in Settings → Transcription → Hardware. |
+| **ffmpeg** | Required for video container support. Install and add to PATH. |
+| **LM Studio** | https://lmstudio.ai — optional, only if you want to run the LLM locally. Load a chat model (Qwen 2.5 7B Instruct works well). |
+| **Notion** | Create an integration at https://www.notion.so/my-integrations and share your target database with it. |
 
 ---
 
@@ -44,17 +46,17 @@ python -m venv venv
 pip install -r requirements.txt
 ```
 
-`requirements.txt` udah include `nvidia-cublas-cu12` + `nvidia-cudnn-cu12` jadi CUDA langsung jalan. Total install size ~2 GB.
+`requirements.txt` includes `nvidia-cublas-cu12` and `nvidia-cudnn-cu12`, so CUDA works out of the box. Total install size is ~2 GB.
 
-### Optional: build standalone launcher
+### Optional: build a standalone launcher
 
-Default launcher adalah `NoteNara.bat`. Buat dapet `NoteNara.exe` dengan icon proper di taskbar:
+The default launcher is `NoteNara.bat`. To get a real `NoteNara.exe` with the proper taskbar icon and AppUserModelID grouping:
 
 ```powershell
 pip install pyinstaller pywin32
 python -m PyInstaller --onefile --windowed --icon=app\assets\NoteNara.ico --name=NoteNara --distpath=. --workpath=build --specpath=build --noconfirm launcher.py
 Remove-Item build -Recurse -Force
-python make-shortcut.py  # generates NoteNara.lnk with proper AppUserModelID
+python make-shortcut.py  # generates NoteNara.lnk with the AppUserModelID property set
 ```
 
 ---
@@ -65,63 +67,63 @@ python make-shortcut.py  # generates NoteNara.lnk with proper AppUserModelID
 .\NoteNara.bat
 ```
 
-Atau dobel-klik `NoteNara.exe` kalo udah di-build.
+Or double-click `NoteNara.exe` if you've built it.
 
-Pas pertama dibuka, app bakal:
-1. Detect kalo belum ada config → munculin wizard welcome screen
-2. Klik "Add workspace →" buat input:
-   - **Label** (nama workspace, misal "Personal" / "Acme Client")
-   - **Notion integration token** (dari https://www.notion.so/my-integrations)
-   - Klik "Test & fetch databases" → bakal nge-pull list semua DB yang share ke integration kamu
-   - Pilih **Target database** (DB tempat meeting notes akan dibuat)
-   - Optionally pilih **Projects database** (kalo punya DB khusus list project, kalo gak — app bakal search all pages)
-3. Save → langsung bisa pakai
+On first launch the app will:
+1. Detect that no config exists and show a welcome wizard.
+2. Click "Add workspace →" to enter:
+   - **Label** (workspace name, e.g., "Personal" / "Acme Client")
+   - **Notion integration token** (from https://www.notion.so/my-integrations)
+   - Click "Test & fetch databases" — the app will pull every database your integration has access to.
+   - Pick a **Target database** (where meeting notes will be created).
+   - Optionally pick a **Projects database** (if you keep a separate database for projects; otherwise the app will search across all pages).
+3. Save and you're ready to go.
 
-Settings (gear icon, top-right) buat ngubah:
-- **Workspaces** — add/edit/delete profile, set active, page format, default project
-- **AI Model** — provider (LM Studio/Ollama/OpenAI/Anthropic/Gemini/DeepSeek/Custom), base URL, model, API key
-- **Transcription** — Whisper model size, bahasa, compute precision, decode quality, GPU/CPU hardware
-- **Notifications** — Telegram bot + Discord webhook, dengan test send button
-- **Output** — folder transcript file, auto-open Notion toggle
+The Settings dialog (gear icon, top-right) lets you configure:
+- **Workspaces** — add / edit / delete profiles, set the active one, configure page format and default project.
+- **AI Model** — provider (LM Studio / Ollama / OpenAI / Anthropic / Gemini / DeepSeek / Custom), base URL, model, API key.
+- **Transcription** — Whisper model size, audio language, compute precision, decode quality, GPU/CPU hardware.
+- **Notifications** — Telegram bot and Discord webhook, with test-send buttons.
+- **Output** — transcript output folder, auto-open Notion toggle, **interface language** (English / Bahasa Indonesia).
 
 ---
 
 ## 💡 How to use
 
-1. Pastiin LLM provider lu siap (LM Studio jalan di port 1234, atau API key set di Settings)
-2. Drag & drop video/audio meeting ke drop zone, atau klik pilih file
-3. Klik **Start transcription** → progress bar update real-time per fase
-4. Setelah transcribe + summarize selesai → **Review page** muncul, lu bisa edit summary/key points/action items
-5. Klik **Send to Notion** → pilih workspace, project, topic, **meeting date** (auto-detect dari file mtime)
-6. Klik **Publish** → done, halaman Notion otomatis kebuka
+1. Make sure your LLM provider is ready (LM Studio running on port 1234, or an API key configured in Settings).
+2. Drag & drop a meeting recording onto the drop zone, or click to pick a file.
+3. Click **Start transcription**. The progress bar updates per phase in real time.
+4. When transcribe + summarize finishes, a **Review** page opens where you can edit the summary, key points, and action items.
+5. Click **Send to Notion** and fill in workspace, project, topic, and meeting date (auto-filled from the file's modification time).
+6. Click **Publish** — done. The Notion page opens automatically if auto-open is enabled.
 
 ---
 
 ## 🛠 Troubleshooting
 
-**"Library cublas64_12.dll is not found"**
-CUDA libraries belum installed. Run `pip install nvidia-cublas-cu12 nvidia-cudnn-cu12`. Atau switch ke CPU mode di Settings → Transcription → Hardware → "CPU".
+**"Library cublas64_12.dll is not found"**  
+CUDA libraries are missing. Run `pip install nvidia-cublas-cu12 nvidia-cudnn-cu12`, or switch to CPU mode in Settings → Transcription → Hardware → "CPU".
 
-**"Can't reach http://localhost:1234/v1"**
-LM Studio belum jalan, atau model belum di-load. Buka LM Studio, pilih model, klik "Start Server".
+**"Can't reach http://localhost:1234/v1"**  
+LM Studio isn't running, or no model is loaded. Open LM Studio, pick a model, and click "Start Server".
 
-**Whisper stuck di "Loading services…" lama banget**
-GPU VRAM contention sama LM Studio (sama-sama rebutan VRAM). Solusi: close LM Studio dulu sebelum transcribe, atau switch Whisper ke CPU mode di Settings.
+**Whisper stuck at "Loading services…" for a long time**  
+GPU VRAM contention with LM Studio (both apps competing for VRAM). Either close LM Studio before transcribing, or switch Whisper to CPU mode in Settings.
 
-**"Failed to load · check token"**
-Notion integration token salah, atau database belum di-share ke integration. Di Notion: buka database → "..." → "Add connections" → pilih integration kamu.
+**"Failed to load · check token"**  
+The Notion integration token is wrong, or the database hasn't been shared with the integration. In Notion: open the database → "..." → "Add connections" → pick your integration.
 
-**"No chat-capable models found (only embeddings)"**
-LM Studio cuma punya embedding model loaded. Load chat model (cari Qwen 2.5 / Llama 3.2 di LM Studio search).
+**"No chat-capable models found (only embeddings)"**  
+LM Studio only has an embedding model loaded. Load a chat model (search for Qwen 2.5 or Llama 3.2 in LM Studio).
 
-**"Tengah Tengah Tengah" hallucination muncul lagi**
-v2 udah pake `condition_on_previous_text=False` plus VAD tuning. Kalo masih muncul, di Settings → Transcription → Decode quality coba ganti ke "Thorough".
+**Looping phrase hallucination (e.g., "Tengah Tengah Tengah")**  
+v2 disables `condition_on_previous_text` and tunes VAD to prevent this. If it still happens, try setting Decode quality to "Thorough" in Settings → Transcription.
 
-**Long meeting (>1 jam) — LLM summary dipotong**
-Map-reduce chunking otomatis aktif buat transcript panjang. Kalo masih kepotong, naikin LM Studio context length ke 32768+, atau pake DeepSeek/Anthropic yang max context-nya 128K+.
+**Long meeting (>1 hour) — LLM summary gets cut off**  
+Map-reduce chunking kicks in automatically for long transcripts. If you still see truncation, increase the LM Studio context length to 32768+, or switch to DeepSeek / Anthropic (128K+ context).
 
-**Taskbar icon balik ke Python feather setelah pin**
-Use `NoteNara.lnk` (bukan .exe langsung) buat pin ke taskbar. .lnk udah punya `AppUserModelID` property yang bikin Windows konsisten pake icon NoteNara.
+**Taskbar icon reverts to the Python feather after pinning**  
+Use `NoteNara.lnk` (not the `.exe` directly) to pin to the taskbar. The shortcut has the AppUserModelID property set so Windows keeps the NoteNara icon consistent.
 
 ---
 
@@ -132,7 +134,7 @@ NoteNara/
 ├── meeting_app.py                # entrypoint (thin)
 ├── launcher.py                   # source for NoteNara.exe (PyInstaller)
 ├── make-shortcut.py              # generates NoteNara.lnk with AppUserModelID
-├── meeting_app_config.json       # your config (gitignored — has tokens!)
+├── meeting_app_config.json       # your config (gitignored — contains tokens!)
 ├── meeting_app_config.example.json
 ├── requirements.txt
 ├── NoteNara.bat                  # debug launcher (console visible)
@@ -140,11 +142,12 @@ NoteNara/
 ├── app/
 │   ├── config.py                 # v2 schema + migration
 │   ├── constants.py              # paths, palette
+│   ├── i18n.py                   # EN / ID translation strings
 │   ├── pipeline.py               # orchestrator
-│   ├── assets/                   # logo PNGs, ico, SVG sources
+│   ├── assets/                   # logo PNGs, .ico, SVG sources
 │   ├── services/
 │   │   ├── whisper.py            # cached model, VAD-tuned
-│   │   ├── llm.py                # multi-provider (OpenAI/Anthropic/Gemini/DeepSeek)
+│   │   ├── llm.py                # multi-provider (OpenAI / Anthropic / Gemini / DeepSeek)
 │   │   ├── notion.py             # workspace + page client
 │   │   ├── telegram.py           # bot notifications
 │   │   └── discord.py            # webhook notifications
@@ -168,9 +171,15 @@ NoteNara/
 - **tkinterdnd2** — drag & drop in Tk
 - **Pillow** — PIL rendering for smooth antialiased widgets
 - **requests** — HTTP only; no SDK bloat
-- LM Studio / Ollama / OpenAI / DeepSeek / Custom expose **OpenAI-compatible API** — one client handles them
-- Anthropic + Gemini have native adapters with their own request schemas
+- LM Studio / Ollama / OpenAI / DeepSeek / Custom expose an **OpenAI-compatible API** — a single client handles all of them
+- Anthropic and Gemini have native adapters with their own request schemas
 - Notion **REST API v1** (Notion-Version: 2022-06-28)
 - Telegram **Bot API** + Discord **Webhooks**
 
-No heavy non-ML deps. The whole project is ~3k lines of Python + a venv yang mostly nvidia CUDA DLLs.
+No heavy non-ML dependencies. The project is ~3k lines of Python plus a venv that's mostly NVIDIA CUDA DLLs.
+
+---
+
+## 📄 License
+
+Proprietary — all rights reserved. This repository is private; contact the author for usage rights.
