@@ -1,0 +1,11 @@
+faster-whisper==1.2.1
+requests==2.33.1
+tkinterdnd2==0.4.3
+Pillow>=10.0.0
+
+# CUDA runtime libraries — required by ctranslate2 (faster-whisper's backend)
+# to load cublas64_12.dll + cudnn DLLs at GPU init. Not auto-installed because
+# ctranslate2 supports CPU-only too; we pin them explicitly so a fresh
+# `pip install -r requirements.txt` always produces a working GPU build.
+nvidia-cublas-cu12
+nvidia-cudnn-cu12

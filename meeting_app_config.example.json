@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "active_profile": "",
+  "llm": {
+    "provider": "lm_studio",
+    "base_url": "http://localhost:1234/v1",
+    "model": "auto",
+    "api_key": "lm-studio",
+    "max_context": null,
+    "temperature": 0.3
+  },
+  "whisper": {
+    "model": "turbo",
+    "language": "id",
+    "compute_type": "float16",
+    "beam_size": 5,
+    "vad_filter": true
+  },
+  "telegram": {
+    "enabled": false,
+    "bot_token": "",
+    "chat_id": ""
+  },
+  "output_dir": "./output",
+  "profiles": {}
+}

@@ -1,0 +1,40 @@
+# Secrets — config carries Notion tokens
+meeting_app_config.json
+meeting_app_config.json.*.bak
+
+# Local env
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# User data — large and personal
+models/
+input/
+output/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Build / dist
+build/
+dist/
+*.egg-info/
+
+# PyInstaller output — regenerable from launcher.py
+NoteNara.exe
+*.spec
+
+# Per-user shortcuts — contain absolute paths to local install
+NoteNara.lnk
+
+# Logs
+logs/
