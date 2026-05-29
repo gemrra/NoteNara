@@ -19,6 +19,8 @@ from typing import Any, Callable, Optional
 
 import requests
 
+from ..i18n import t
+
 
 @dataclass
 class SummaryResult:
@@ -193,40 +195,16 @@ class LLMClient:
 
     # ---------- Summarization ----------
 
-    SYSTEM_PROMPT = (
-        "You are a professional meeting notes assistant. Your job is to read "
-        "a meeting transcript and produce a clean, structured summary. "
-        "Always respond ONLY with valid JSON matching the requested schema — "
-        "no markdown, no backticks, no commentary.\n\n"
-        "IMPORTANT: write the summary, key_points, and action_items in the "
-        "SAME LANGUAGE as the transcript. If the transcript is in Indonesian, "
-        "respond in Indonesian. If it is in English, respond in English. "
-        "Do not translate."
-    )
+    # Prompts come from i18n so the user's chosen UI language drives them.
+    # Note that LLM output language is auto-detected from the transcript
+    # (instruction inside the prompt body), independent of UI locale.
+    @property
+    def SYSTEM_PROMPT(self) -> str:  # noqa: N802 — keep old all-caps name
+        return t("llm.system_prompt")
 
-    USER_TEMPLATE = (
-        "Meeting topic: {materi}\n"
-        "Project: {project}\n\n"
-        "Transcript:\n{transcript}\n\n"
-        "Task: analyse the transcript above and output a summary as JSON.\n\n"
-        "Strict rules:\n"
-        "1. key_points: array of STRING. Can be 2 to 15+ items — follow what "
-        "the meeting actually covered. DO NOT force exactly 3.\n"
-        "2. action_items: array of STRING (NOT object / dict). Each item is "
-        "one sentence: 'Task description - PIC (if mentioned)'. "
-        "Correct example: 'Draft the contract - Danar'. If there are no "
-        "tasks, return an empty array [].\n"
-        "3. summary: STRING, 3-5 sentences — what was discussed + outcome / "
-        "conclusion.\n\n"
-        "Match the language of the transcript (do not translate). "
-        "Respond ONLY with valid JSON (no markdown, no backticks, no extra "
-        "prose). Structure:\n"
-        "{{\n"
-        "  \"summary\": \"...\",\n"
-        "  \"key_points\": [\"...\", \"...\"],\n"
-        "  \"action_items\": [\"... - PIC\", \"...\"]\n"
-        "}}"
-    )
+    @property
+    def USER_TEMPLATE(self) -> str:  # noqa: N802
+        return t("llm.user_template")
 
     def summarize_transcript(
         self,
@@ -267,7 +245,7 @@ class LLMClient:
 
         if not partials:
             return SummaryResult(
-                summary="[All chunks failed — try running again or switch to a larger model.]",
+                summary=t("llm.error.all_chunks_failed"),
                 key_points=[], action_items=[], truncated=truncated,
             )
 
@@ -297,8 +275,8 @@ class LLMClient:
             "messages": [
                 {"role": "system", "content": self.SYSTEM_PROMPT},
                 {"role": "user", "content": self.USER_TEMPLATE.format(
-                    materi=materi_label or "(not specified)",
-                    project=project or "(not specified)",
+                    materi=materi_label or t("llm.placeholder.not_specified"),
+                    project=project or t("llm.placeholder.not_specified"),
                     transcript=chunk_text,
                 )},
             ],
@@ -315,16 +293,9 @@ class LLMClient:
             truncated=truncated,
         )
 
-    MERGE_PROMPT = (
-        "Below are section-by-section summaries from one long meeting. "
-        "Task: produce ONE final summary (3-5 sentences) that combines all "
-        "sections into a coherent narrative.\n\n"
-        "Write the final summary in the SAME LANGUAGE as the section "
-        "summaries — do not translate.\n\n"
-        "Section summaries:\n{partials}\n\n"
-        "Respond ONLY with JSON (no markdown):\n"
-        "{{\"summary\": \"...\"}}"
-    )
+    @property
+    def MERGE_PROMPT(self) -> str:  # noqa: N802
+        return t("llm.merge_prompt")
 
     def _merge_partials(
         self,
@@ -642,11 +613,7 @@ def _parse_summary_json(text: str) -> dict[str, Any]:
     # Give up — truncate text so we don't dump a 50kB blob into Notion.
     truncated_text = text if len(text) < 1500 else text[:1500] + "\n…(truncated)"
     return {
-        "summary": (
-            "[LLM failed to produce valid JSON — try running again, "
-            "increase max_tokens, or switch to a larger model.]\n\n"
-            + truncated_text
-        ),
+        "summary": t("llm.error.invalid_json") + "\n\n" + truncated_text,
         "key_points": [],
         "action_items": [],
     }

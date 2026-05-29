@@ -14,6 +14,8 @@ from typing import Any, Optional
 
 import requests
 
+from ..i18n import t, months as i18n_months
+
 
 NOTION_VERSION = "2022-06-28"
 API = "https://api.notion.com/v1"
@@ -239,18 +241,18 @@ class NotionClient:
             properties[date_prop] = {"date": {"start": date_iso}}
 
         children: list[dict[str, Any]] = []
-        children.append(_heading_2("📋 Summary"))
+        children.append(_heading_2(t("notion.heading.summary")))
         children.extend(_paragraph_blocks(summary or "-"))
         children.append(_divider())
 
-        children.append(_heading_2("💬 Key Points"))
+        children.append(_heading_2(t("notion.heading.key_points")))
         if key_points:
             children.extend(_bulleted_blocks(key_points))
         else:
             children.extend(_paragraph_blocks("-"))
         children.append(_divider())
 
-        children.append(_heading_2("✅ Action Items"))
+        children.append(_heading_2(t("notion.heading.action_items")))
         if action_items:
             children.extend(_todo_blocks(action_items))
         else:
@@ -376,10 +378,9 @@ def format_page_title(project: str, materi: str, date_iso: str) -> str:
     """
     try:
         d = datetime.date.fromisoformat(date_iso)
-        # English month abbreviations for professional / international notes.
-        months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-        date_label = f"{d.day:02d} {months[d.month - 1]} {d.year}"
+        # Month abbreviations come from i18n — Indonesian or English based on
+        # the user's active UI locale.
+        date_label = f"{d.day:02d} {i18n_months()[d.month - 1]} {d.year}"
     except (ValueError, IndexError):
         date_label = date_iso
     parts = [p for p in (project.strip() if project else "", materi.strip(), date_label) if p]

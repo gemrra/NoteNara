@@ -28,6 +28,7 @@ from ..config import (
     resolve_output_dir, save_config, set_active_profile,
 )
 from ..constants import C, F, FONTS, ASSETS_DIR, apply_theme, resolve_fonts
+from ..i18n import t
 from ..pipeline import MeetingPipeline, PipelineInputs, PipelineResult
 from ..services.llm import LLMClient, SummaryResult
 from ..services.notion import (
@@ -86,6 +87,10 @@ class App(_Base):  # type: ignore[misc, valid-type]
         super().__init__()
         self.cfg = load_config()
         apply_theme_from_cfg(self.cfg)
+        # Set i18n locale BEFORE any widget construction so all UI strings
+        # resolve to the user's chosen language.
+        from ..i18n import set_locale
+        set_locale(self.cfg.get("language", "en"))
         resolve_fonts(self)
 
         # Per-session state — shared between views during one transcription run.
@@ -644,11 +649,11 @@ class MainView(BaseView):
         if self.app._processing:
             return
         path = filedialog.askopenfilename(
-            title="Choose audio / video",
+            title=t("file_dialog.title"),
             filetypes=[("Audio/Video",
                          "*.mp4 *.mp3 *.wav *.m4a *.mkv *.webm *.ogg *.flac "
                          "*.aac *.opus *.mov *.avi"),
-                        ("All files", "*.*")])
+                        (t("file_dialog.all_files"), "*.*")])
         if path:
             self._set_file(path)
 
@@ -957,7 +962,8 @@ class PreviewView(BaseView):
         self._populate_raw_section(inner)
 
     def _populate_summary_section(self, inner, summary):
-        _ornament_label(inner, "summary").pack(fill="x", padx=24, pady=(18, 8))
+        _ornament_label(inner, t("preview.ornament.summary")).pack(
+            fill="x", padx=24, pady=(18, 8))
         card = _card(inner)
         card.pack(fill="x", padx=24)
         self._summary_text = _editable_text(card.inner, summary.summary,
@@ -1057,9 +1063,11 @@ class PreviewView(BaseView):
         s = self._collect_summary()
         if s is None:
             return self.app._transcript_text or ""
-        lines = [f"## Summary\n\n{s.summary}\n",
-                 "## Key points", *[f"- {p}" for p in s.key_points], "",
-                 "## Action items", *[f"- [ ] {a}" for a in s.action_items], ""]
+        lines = [f"{t('markdown.heading.summary')}\n\n{s.summary}\n",
+                 t("markdown.heading.key_points"),
+                 *[f"- {p}" for p in s.key_points], "",
+                 t("markdown.heading.action_items"),
+                 *[f"- [ ] {a}" for a in s.action_items], ""]
         return "\n".join(lines)
 
     def _render_plain(self) -> str:
@@ -1147,7 +1155,7 @@ class NotionSetupView(BaseView):
         self._project_dd.pack(fill="x", pady=(0, 14))
 
         # Topic
-        self._field_label(body, "Topic")
+        self._field_label(body, t("notion_setup.label.topic"))
         self._topic_input = SmoothInput(body, placeholder="",
                                            height=38, radius=12,
                                            bg=C["card"])
@@ -1326,7 +1334,8 @@ class NotionSetupView(BaseView):
             return
         materi = self._topic_entry.get().strip()
         if not materi:
-            self._status.config(text="Topic is required.", fg=C["err"])
+            self._status.config(text=t("notion_setup.error.no_topic"),
+                                  fg=C["err"])
             return
         project = self._project_dd.get().strip()
         if project == "(no project)":
@@ -1334,7 +1343,8 @@ class NotionSetupView(BaseView):
 
         slug = self._slug_for(self._workspace_dd.get())
         if not slug:
-            self._status.config(text="Choose a workspace first.", fg=C["err"])
+            self._status.config(text=t("notion_setup.error.no_workspace"),
+                                  fg=C["err"])
             return
         profile = self.app.cfg["profiles"][slug]
 

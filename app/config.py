@@ -104,6 +104,9 @@ def empty_config() -> dict[str, Any]:
         "auto_open_notion": False,
         # "light" or "dark". Light is default to match the editorial mockup.
         "theme": "light",
+        # "en" or "id". English default — more professional first impression,
+        # users in Indonesia can swap in Settings → Appearance.
+        "language": "en",
         "profiles": {},
     }
 

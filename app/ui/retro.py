@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Callable, Optional
 
 from ..constants import C, F
+from ..i18n import months as i18n_months
 from .widgets import HAS_DND, MEDIA_EXTS
 from .smooth import (
     HeaderSmoothIconButton, RoundedButton, SmoothChip, SmoothCircleIcon,
@@ -393,8 +394,7 @@ def scan_recent(output_dir: Path, max_items: int = 3) -> list[dict]:
         return []
     import datetime
     out = []
-    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-              "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    months = i18n_months()
     for f in files[:max_items]:
         try:
             mtime = datetime.datetime.fromtimestamp(f.stat().st_mtime)

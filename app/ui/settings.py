@@ -1647,7 +1647,33 @@ class OutputTab(tk.Frame):
                        "so you can open the page manually.",
                  bg=C["card"], fg=C["ink3"], font=F("mono", 9),
                  wraplength=320, justify="left",
-                 anchor="w").pack(fill="x", pady=(4, 0))
+                 anchor="w").pack(fill="x", pady=(4, 20))
+
+        # ===== Interface language =====
+        # Drives UI labels, Notion headings, month abbreviations. LLM summary
+        # output language is auto-detected from the transcript regardless of
+        # this setting (Indonesian audio → Indonesian summary, etc.).
+        _section_label(body, "Interface language")
+        self.LANG_OPTIONS = [
+            ("English",     "en"),
+            ("Bahasa Indonesia", "id"),
+        ]
+        lang_labels = [lbl for lbl, _ in self.LANG_OPTIONS]
+        current_code = (cfg.get("language") or "en").lower()
+        current_label = next(
+            (lbl for lbl, code in self.LANG_OPTIONS if code == current_code),
+            lang_labels[0])
+        self._lang_dd = SmoothDropdown(
+            body, values=lang_labels, initial=current_label,
+            height=34, radius=11, bg=C["card"])
+        self._lang_dd.pack(fill="x", pady=(0, 4))
+        tk.Label(body,
+                 text="Changes the app UI + Notion page headings. "
+                       "Meeting summary itself still follows the audio "
+                       "language. Restart NoteNara to apply.",
+                 bg=C["card"], fg=C["ink3"], font=F("mono", 9),
+                 wraplength=520, justify="left",
+                 anchor="w").pack(fill="x", pady=(0, 0))
 
     def _browse(self):
         d = filedialog.askdirectory(title="Pick output folder")
@@ -1659,6 +1685,12 @@ class OutputTab(tk.Frame):
         self.cfg["output_dir"] = (self._path_entry.get().strip()
                                     or "./output")
         self.cfg["auto_open_notion"] = self._auto_open_cb.is_checked()
+        # Language: map dropdown label back to ISO code.
+        chosen_label = self._lang_dd.get()
+        chosen_code = next(
+            (code for lbl, code in self.LANG_OPTIONS if lbl == chosen_label),
+            "en")
+        self.cfg["language"] = chosen_code
 
 
 # AppearanceTab removed — no theme switching shipped yet.
