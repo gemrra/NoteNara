@@ -140,7 +140,7 @@ STRINGS: dict[str, dict[str, str]] = {
         # ----- settings: About tab -----
         "settings.about.tagline":       "Local meeting transcription — private by default.",
         "settings.about.version":       "Version {v}",
-        "settings.about.made_by":       "Made by Gema",
+        "settings.about.made_by":       "Made by gemrra",
         "settings.about.credits_title": "Built with",
         "settings.about.credits": (
             "- Whisper (faster-whisper / CTranslate2) - speech-to-text\n"
@@ -454,7 +454,7 @@ STRINGS: dict[str, dict[str, str]] = {
         # ----- settings: About tab -----
         "settings.about.tagline":       "Transkripsi meeting lokal — privat by default.",
         "settings.about.version":       "Versi {v}",
-        "settings.about.made_by":       "Dibuat oleh Gema",
+        "settings.about.made_by":       "Dibuat oleh gemrra",
         "settings.about.credits_title": "Dibangun dengan",
         "settings.about.credits": (
             "- Whisper (faster-whisper / CTranslate2) - speech-to-text\n"

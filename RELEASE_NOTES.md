@@ -10,7 +10,19 @@ A self-contained Windows build. **No Python install, no `pip`, no CUDA toolkit r
 
 That's it — the app launches. GPU transcription works out of the box if you have an NVIDIA card; otherwise switch to CPU in Settings → Transcription → Hardware.
 
-> **Windows SmartScreen** may warn on first launch because the build isn't code-signed. Click **More info → Run anyway**. (The source is fully open at this repo if you'd rather build it yourself.)
+> **Windows SmartScreen** may warn on first launch because the build isn't code-signed. Click **More info → Run anyway**.
+
+## What's in the package
+
+The download is ~1.3 GB zipped (~2.1 GB extracted) because it's fully self-contained — nothing gets installed on your system:
+
+- **Embedded Python runtime** — no Python install needed.
+- **Whisper engine** — faster-whisper + CTranslate2 (the speech-to-text backend).
+- **NVIDIA CUDA runtime** — cublas + cuDNN DLLs (~1.9 GB of the size). This is what makes GPU transcription work **without installing the CUDA Toolkit**.
+- **Media decoding** — PyAV / FFmpeg bindings for mp4 / mkv / mov / etc.
+- **UI + integrations** — Notion, Telegram, Discord, and all 6 LLM provider adapters.
+
+The Whisper model (~1.5 GB) is the only piece not bundled — it downloads on first transcription into a `models/` folder next to the app.
 
 ## What you still need to set up (one-time, ~5 minutes)
 

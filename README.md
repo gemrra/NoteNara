@@ -10,7 +10,19 @@ Local meeting transcription app for Windows. Drop an audio/video recording, get 
 
 ## ⬇️ Download (no install)
 
-Grab the latest **[Releases](https://github.com/gemarafi66-svg/NoteNara/releases)** zip, extract it, and double-click `NoteNara.exe`. No Python, no `pip`, no CUDA toolkit needed — everything is bundled (~2 GB). You only set up an LLM API key (or LM Studio) and, optionally, Notion.
+Grab the latest **[Releases](https://github.com/gemarafi66-svg/NoteNara/releases)** zip, extract it, and double-click `NoteNara.exe`. That's it — nothing to install.
+
+**Everything runs offline, out of the box.** The download is large (~1.3 GB zipped, ~2.1 GB extracted) because the package is fully self-contained — it ships its own copy of everything the app needs so you don't have to install or configure anything system-wide:
+
+- **Python runtime** — the app's interpreter, embedded. You don't need Python installed.
+- **Whisper engine** — `faster-whisper` + the CTranslate2 inference backend that does the actual speech-to-text.
+- **NVIDIA CUDA runtime libraries** — `cublas` and `cuDNN` DLLs (~1.9 GB of the size). These are what let transcription run on your GPU **without installing the CUDA Toolkit**. If you don't have an NVIDIA card, the app falls back to CPU automatically.
+- **Media decoding** — `PyAV` / FFmpeg bindings so video containers (mp4, mkv, mov…) work without a separate FFmpeg install.
+- **The UI + all integrations** — Notion, Telegram, Discord, and the 6 LLM provider adapters.
+
+The only thing **not** bundled is the Whisper model file itself (~1.5 GB) — it downloads automatically the first time you transcribe, into a `models/` folder next to the app, so the package stays as small as possible.
+
+After extracting, you only need to: paste an LLM API key (or run LM Studio locally) and, optionally, connect Notion. See [First Run](#-first-run).
 
 Prefer to run from source or build it yourself? See [Installation](#-installation) below.
 
@@ -200,4 +212,4 @@ No heavy non-ML dependencies. The project is ~3k lines of Python plus a venv tha
 
 ## 📄 License
 
-MIT — see [LICENSE](LICENSE). You're free to use, modify, and redistribute, including commercially, as long as the copyright notice stays in the source. No warranty.
+Released under the [MIT License](LICENSE). © 2026 gemrra. Provided as-is, without warranty.
