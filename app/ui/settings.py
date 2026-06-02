@@ -1724,7 +1724,7 @@ class AboutTab(tk.Frame):
     informational (logo, version, author, tech stack, GitHub link, license).
     """
 
-    GITHUB_URL = "https://github.com/gemarafi66-svg/NoteNara"
+    GITHUB_URL = "https://github.com/gemrra/NoteNara"
 
     def __init__(self, parent, cfg: dict):
         super().__init__(parent, bg=C["card"])

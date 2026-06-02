@@ -10,7 +10,7 @@ Local meeting transcription app for Windows. Drop an audio/video recording, get 
 
 ## ⬇️ Download (no install)
 
-Grab the latest **[Releases](https://github.com/gemarafi66-svg/NoteNara/releases)** zip, extract it, and double-click `NoteNara.exe`. That's it — nothing to install.
+Grab the latest **[Releases](https://github.com/gemrra/NoteNara/releases)** zip, extract it, and double-click `NoteNara.exe`. That's it — nothing to install.
 
 **Everything runs offline, out of the box.** The download is large (~1.3 GB zipped, ~2.1 GB extracted) because the package is fully self-contained — it ships its own copy of everything the app needs so you don't have to install or configure anything system-wide:
 
@@ -61,7 +61,7 @@ Prefer to run from source or build it yourself? See [Installation](#-installatio
 **Quick start (Windows):**
 
 ```powershell
-git clone https://github.com/gemarafi66-svg/NoteNara.git
+git clone https://github.com/gemrra/NoteNara.git
 cd NoteNara
 install_deps.bat
 ```

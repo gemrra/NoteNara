@@ -43,7 +43,7 @@ if ($zipSize -gt 2.0) {
 
 Write-Host ""
 Write-Host "Next: create a GitHub Release and attach the .zip:" -ForegroundColor Cyan
-Write-Host "  1. https://github.com/gemarafi66-svg/NoteNara/releases/new"
+Write-Host "  1. https://github.com/gemrra/NoteNara/releases/new"
 Write-Host "  2. Tag: v$Version   Title: NoteNara v$Version"
 Write-Host "  3. Drag the .zip into the assets box"
 Write-Host "  4. Paste RELEASE_NOTES.md as the description"
