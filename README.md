@@ -8,6 +8,14 @@ Local meeting transcription app for Windows. Drop an audio/video recording, get 
 
 ---
 
+## ⬇️ Download (no install)
+
+Grab the latest **[Releases](https://github.com/gemarafi66-svg/NoteNara/releases)** zip, extract it, and double-click `NoteNara.exe`. No Python, no `pip`, no CUDA toolkit needed — everything is bundled (~2 GB). You only set up an LLM API key (or LM Studio) and, optionally, Notion.
+
+Prefer to run from source or build it yourself? See [Installation](#-installation) below.
+
+---
+
 ## ✨ Features
 
 - **Whisper turbo on CUDA** — transcribe a 1-hour meeting in ~3 minutes on a mid-range GPU. CPU fallback when no NVIDIA card is available.
