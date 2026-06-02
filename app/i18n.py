@@ -135,6 +135,22 @@ STRINGS: dict[str, dict[str, str]] = {
         "settings.tab.transcription":   "Transcription",
         "settings.tab.notifications":   "Notifications",
         "settings.tab.output":          "Output",
+        "settings.tab.about":           "About",
+
+        # ----- settings: About tab -----
+        "settings.about.tagline":       "Local meeting transcription — private by default.",
+        "settings.about.version":       "Version {v}",
+        "settings.about.made_by":       "Made by Gema",
+        "settings.about.credits_title": "Built with",
+        "settings.about.credits": (
+            "- Whisper (faster-whisper / CTranslate2) - speech-to-text\n"
+            "- LM Studio / Ollama / OpenAI / Anthropic / Gemini / DeepSeek - summarization\n"
+            "- Notion API - publishing\n"
+            "- Telegram / Discord - notifications\n"
+            "- Python / Tkinter / Pillow - the app itself"
+        ),
+        "settings.about.github":        "View on GitHub",
+        "settings.about.license":       "MIT License - free to use, modify, and share.",
 
         # ----- settings: Notion tab -----
         "settings.notion.workspaces":   "Workspaces",
@@ -433,6 +449,22 @@ STRINGS: dict[str, dict[str, str]] = {
         "settings.tab.transcription":   "Transkripsi",
         "settings.tab.notifications":   "Notifikasi",
         "settings.tab.output":          "Output",
+        "settings.tab.about":           "Tentang",
+
+        # ----- settings: About tab -----
+        "settings.about.tagline":       "Transkripsi meeting lokal — privat by default.",
+        "settings.about.version":       "Versi {v}",
+        "settings.about.made_by":       "Dibuat oleh Gema",
+        "settings.about.credits_title": "Dibangun dengan",
+        "settings.about.credits": (
+            "- Whisper (faster-whisper / CTranslate2) - speech-to-text\n"
+            "- LM Studio / Ollama / OpenAI / Anthropic / Gemini / DeepSeek - ringkasan\n"
+            "- Notion API - publishing\n"
+            "- Telegram / Discord - notifikasi\n"
+            "- Python / Tkinter / Pillow - app-nya sendiri"
+        ),
+        "settings.about.github":        "Lihat di GitHub",
+        "settings.about.license":       "Lisensi MIT - bebas dipakai, dimodif, dibagikan.",
 
         # ----- settings: Notion tab -----
         "settings.notion.workspaces":   "Workspaces",

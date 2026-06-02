@@ -23,8 +23,8 @@ from ..i18n import t
 from ..services.llm import LLMClient
 from ..services.notion import DatabaseRef, NotionClient, SchemaDetection
 from .smooth import (
-    RoundedButton, SmoothCard, SmoothCheckBox, SmoothDropdown, SmoothIcon,
-    SmoothInput, SmoothRadio,
+    BrandLogo, RoundedButton, SmoothCard, SmoothCheckBox, SmoothDropdown,
+    SmoothIcon, SmoothInput, SmoothRadio,
 )
 
 
@@ -99,6 +99,7 @@ class SettingsView(tk.Frame):
         ("transcription", "settings.tab.transcription",   "mic"),
         ("notifications", "settings.tab.notifications",   "bell"),
         ("output",        "settings.tab.output",          "folder"),
+        ("about",         "settings.tab.about",           "info"),
     ]
 
     def __init__(self, parent, app):
@@ -142,6 +143,7 @@ class SettingsView(tk.Frame):
         self._tab_widgets["transcription"] = WhisperTab(right, self.cfg)
         self._tab_widgets["notifications"] = TelegramTab(right, self.cfg)
         self._tab_widgets["output"] = OutputTab(right, self.cfg)
+        self._tab_widgets["about"] = AboutTab(right, self.cfg)
         for w in self._tab_widgets.values():
             w.place(relx=0, rely=0, relwidth=1, relheight=1)
 
@@ -1711,6 +1713,70 @@ class OutputTab(tk.Frame):
             (code for lbl, code in self.LANG_OPTIONS if lbl == chosen_label),
             "en")
         self.cfg["language"] = chosen_code
+
+
+# ============================================================================
+# About tab — app identity, credits, links
+# ============================================================================
+
+class AboutTab(tk.Frame):
+    """Static credits / about panel. No editable settings — purely
+    informational (logo, version, author, tech stack, GitHub link, license).
+    """
+
+    GITHUB_URL = "https://github.com/gemarafi66-svg/NoteNara"
+
+    def __init__(self, parent, cfg: dict):
+        super().__init__(parent, bg=C["card"])
+        from .. import __version__
+
+        body = tk.Frame(self, bg=C["card"])
+        body.pack(fill="both", expand=True, padx=20, pady=18)
+
+        # Logo + wordmark
+        head = tk.Frame(body, bg=C["card"])
+        head.pack(fill="x", pady=(4, 2))
+        BrandLogo(head, size=44, bg=C["card"]).pack(side="left", padx=(0, 12))
+        title_col = tk.Frame(head, bg=C["card"])
+        title_col.pack(side="left", fill="x", expand=True)
+        tk.Label(title_col, text="NoteNara", bg=C["card"], fg=C["ink"],
+                 font=F("display", 22, italic=True),
+                 anchor="w").pack(fill="x")
+        tk.Label(title_col, text=t("settings.about.version", v=__version__),
+                 bg=C["card"], fg=C["ink3"], font=F("mono", 9),
+                 anchor="w").pack(fill="x")
+
+        tk.Label(body, text=t("settings.about.tagline"),
+                 bg=C["card"], fg=C["ink2"], font=F("body", 10),
+                 anchor="w", wraplength=520, justify="left").pack(
+            fill="x", pady=(10, 0))
+        tk.Label(body, text=t("settings.about.made_by"),
+                 bg=C["card"], fg=C["ink"], font=F("body", 11, "bold"),
+                 anchor="w").pack(fill="x", pady=(8, 0))
+
+        # Divider
+        tk.Frame(body, height=1, bg=C["border_soft"]).pack(
+            fill="x", pady=(16, 14))
+
+        # Credits / tech stack
+        _section_label(body, t("settings.about.credits_title"))
+        tk.Label(body, text=t("settings.about.credits"),
+                 bg=C["card"], fg=C["ink2"], font=F("mono", 9),
+                 anchor="w", justify="left").pack(fill="x", pady=(2, 14))
+
+        # GitHub button
+        RoundedButton(body, t("settings.about.github"),
+                       lambda: webbrowser.open(self.GITHUB_URL),
+                       kind="secondary", size="sm").pack(anchor="w")
+
+        # License footnote
+        tk.Label(body, text=t("settings.about.license"),
+                 bg=C["card"], fg=C["ink3"], font=F("mono", 9),
+                 anchor="w").pack(fill="x", pady=(16, 0))
+
+    def commit(self):
+        # Nothing to persist — informational tab only.
+        pass
 
 
 # AppearanceTab removed — no theme switching shipped yet.
