@@ -31,7 +31,9 @@ dist/
 
 # PyInstaller output — regenerable from launcher.py
 NoteNara.exe
-*.spec
+
+# Release archives (attach to GitHub Releases, don't commit)
+NoteNara-v*-win64.zip
 
 # Per-user shortcuts — contain absolute paths to local install
 NoteNara.lnk

@@ -12,11 +12,32 @@ same hex values via _make_palette() below, so existing widget code doesn't
 need to be rewritten in one go.
 """
 
+import sys
 from pathlib import Path
 from tkinter import font as tkfont
 
-# Project root = parent of the app/ package
-BASE_DIR = Path(__file__).resolve().parent.parent
+# ---------------------------------------------------------------------------
+# Path resolution — works both in dev (running from source) and in a frozen
+# PyInstaller --onedir bundle.
+#
+# Two distinct roots:
+#   BASE_DIR   — user-writable data (config, models, output, logs). Lives
+#                NEXT TO the executable so it persists and the user can see
+#                it. In dev this is the repo root.
+#   BUNDLE_DIR — read-only bundled resources (assets, CUDA DLLs). Inside the
+#                PyInstaller bundle when frozen; same as BASE_DIR in dev.
+# ---------------------------------------------------------------------------
+_FROZEN = getattr(sys, "frozen", False)
+
+if _FROZEN:
+    # PyInstaller: sys.executable is the .exe; bundled data sits in _MEIPASS
+    # (the _internal folder for --onedir).
+    BASE_DIR = Path(sys.executable).resolve().parent
+    BUNDLE_DIR = Path(getattr(sys, "_MEIPASS", BASE_DIR))
+else:
+    # Dev: parent of the app/ package == repo root.
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    BUNDLE_DIR = BASE_DIR
 
 CONFIG_PATH = BASE_DIR / "meeting_app_config.json"
 CONFIG_EXAMPLE_PATH = BASE_DIR / "meeting_app_config.example.json"
@@ -24,10 +45,15 @@ CONFIG_EXAMPLE_PATH = BASE_DIR / "meeting_app_config.example.json"
 DEFAULT_MODEL_DIR = BASE_DIR / "models"
 DEFAULT_OUTPUT_DIR = BASE_DIR / "output"
 LOGS_DIR = BASE_DIR / "logs"
-ASSETS_DIR = BASE_DIR / "app" / "assets"
+ASSETS_DIR = BUNDLE_DIR / "app" / "assets"
 
-# nvidia CUDA DLL search root (used by services/whisper.py setup_cuda_dlls)
-VENV_NVIDIA_DIR = BASE_DIR / "venv" / "Lib" / "site-packages" / "nvidia"
+# nvidia CUDA DLL search root (used by services/whisper.py setup_cuda_dlls).
+# In a frozen bundle the CUDA DLLs are bundled under <bundle>/nvidia/<pkg>/bin
+# (same layout as the venv) so setup_cuda_dlls() works unchanged.
+if _FROZEN:
+    VENV_NVIDIA_DIR = BUNDLE_DIR / "nvidia"
+else:
+    VENV_NVIDIA_DIR = BASE_DIR / "venv" / "Lib" / "site-packages" / "nvidia"
 
 # Legacy: used only by config migration v1 → v2 to preserve existing target DB
 LEGACY_NOTES_DB_ID = "2c16dc1a80f0801f9895e378482a945e"
