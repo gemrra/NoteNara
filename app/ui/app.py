@@ -925,7 +925,7 @@ class PreviewView(BaseView):
         row.pack(fill="x", padx=20, pady=12)
         RoundedButton(row, t("btn.copy_markdown"), self._copy_md,
                        kind="secondary", size="sm").pack(side="left", padx=(0, 6))
-        RoundedButton(row, t("btn.copy_plain"), self._copy_plain,
+        RoundedButton(row, t("btn.save_txt"), self._save_txt,
                        kind="secondary", size="sm").pack(side="left", padx=6)
         RoundedButton(row, t("btn.view_log"), self._view_log,
                        kind="ghost", size="sm").pack(side="left", padx=6)
@@ -1128,6 +1128,53 @@ class PreviewView(BaseView):
         original = self._footer.cget("bg")
         self._footer.configure(bg=C["tint_yellow"])
         self.after(220, lambda: self._footer.configure(bg=original))
+
+    def _save_txt(self):
+        """Save the edited summary as a standalone .txt file next to the
+        local transcript, then open it in the OS default text editor.
+
+        Format mirrors the markdown export — readable in any text editor /
+        Notepad. Filename pattern: ``<original-stem>_summary.txt``. Falls
+        back to the transcript's parent folder when known, otherwise to the
+        configured output_dir.
+        """
+        # Persist any in-place edits before exporting.
+        self.app._summary = self._collect_summary()
+
+        # Pick a sensible output folder + filename.
+        if self.app._transcript_path is not None:
+            out_dir = self.app._transcript_path.parent
+            stem = self.app._transcript_path.stem.replace("_transcript", "")
+        elif self.app._file_path is not None:
+            out_dir = resolve_output_dir(self.app.cfg)
+            stem = self.app._file_path.stem
+        else:
+            out_dir = resolve_output_dir(self.app.cfg)
+            stem = "meeting"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        out_path = out_dir / f"{stem}_summary.txt"
+
+        try:
+            out_path.write_text(self._render_markdown(), encoding="utf-8")
+        except OSError:
+            # Flash footer red briefly to signal failure.
+            original = self._footer.cget("bg")
+            self._footer.configure(bg=C["tint_orange"])
+            self.after(400, lambda: self._footer.configure(bg=original))
+            return
+
+        # Confirm save with a quick yellow flash, then open the file.
+        original = self._footer.cget("bg")
+        self._footer.configure(bg=C["tint_yellow"])
+        self.after(220, lambda: self._footer.configure(bg=original))
+        try:
+            os.startfile(str(out_path))  # type: ignore[attr-defined]
+        except (AttributeError, OSError):
+            import subprocess
+            try:
+                subprocess.Popen(["xdg-open", str(out_path)])
+            except (FileNotFoundError, OSError):
+                pass
 
     def _send_to_notion(self):
         # Persist the edited summary back to app state

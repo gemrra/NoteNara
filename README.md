@@ -14,6 +14,7 @@ Local meeting transcription app for Windows. Drop an audio/video recording, get 
 - **6 LLM providers** — LM Studio, Ollama, OpenAI, Anthropic, Google Gemini, DeepSeek, or any Custom OpenAI-compatible endpoint.
 - **Language-aware prompting** — the LLM keeps summary, key points, and action items in the same language as the transcript (Indonesian audio → Indonesian summary, English audio → English summary). No translation, no mismatched output.
 - **Auto-publish to Notion** — fully structured page with summary, key points, action items, and an optional collapsed raw transcript block.
+- **Save as `.txt`** — one-click export of the edited summary to a plain text file (opens in Notepad / your default editor). Use this when you don't need Notion.
 - **Multi-workspace** — switch between Notion workspaces (e.g., Personal / Client A / Client B) without re-configuring.
 - **Optional notifications** — push summaries to **Telegram** (bot) or **Discord** (webhook) when each meeting is finished.
 - **Drag & drop UI** — not a technical tool; just drop a file. Smooth retro editorial design built with Tkinter + Pillow.
@@ -37,16 +38,23 @@ Local meeting transcription app for Windows. Drop an audio/video recording, get 
 
 ## 🚀 Installation
 
+**Quick start (Windows):**
+
 ```powershell
 git clone https://github.com/gemarafi66-svg/NoteNara.git
 cd NoteNara
+install_deps.bat
+```
 
+`install_deps.bat` checks that Python is available, creates a venv, and installs every dependency including the CUDA runtime libraries (`nvidia-cublas-cu12`, `nvidia-cudnn-cu12`). Total install ~2 GB; the script takes 5–10 minutes on a normal internet connection.
+
+**Manual install (if you prefer):**
+
+```powershell
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
-
-`requirements.txt` includes `nvidia-cublas-cu12` and `nvidia-cudnn-cu12`, so CUDA works out of the box. Total install size is ~2 GB.
 
 ### Optional: build a standalone launcher
 
@@ -94,8 +102,10 @@ The Settings dialog (gear icon, top-right) lets you configure:
 2. Drag & drop a meeting recording onto the drop zone, or click to pick a file.
 3. Click **Start transcription**. The progress bar updates per phase in real time.
 4. When transcribe + summarize finishes, a **Review** page opens where you can edit the summary, key points, and action items.
-5. Click **Send to Notion** and fill in workspace, project, topic, and meeting date (auto-filled from the file's modification time).
-6. Click **Publish** — done. The Notion page opens automatically if auto-open is enabled.
+5. From here you have a few options in the footer:
+   - **Copy markdown** — copy the formatted summary to clipboard.
+   - **Save as .txt** — write a plain text copy of the summary to your output folder and open it in Notepad / your default editor. Use this when you just want a file, no Notion.
+   - **Send to Notion →** — fill in workspace, project, topic, and meeting date (auto-filled from the file's modification time), then **Publish**.
 
 ---
 
@@ -182,4 +192,4 @@ No heavy non-ML dependencies. The project is ~3k lines of Python plus a venv tha
 
 ## 📄 License
 
-Proprietary — all rights reserved. This repository is private; contact the author for usage rights.
+MIT — see [LICENSE](LICENSE). You're free to use, modify, and redistribute, including commercially, as long as the copyright notice stays in the source. No warranty.
