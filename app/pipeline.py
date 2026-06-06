@@ -249,7 +249,17 @@ class MeetingPipeline:
         except Exception as e:
             msg = f"LLM summarisation failed · {e}"
             log(msg, "err")
-            warnings.append(msg)
+            # Friendly hint for the most common cloud-LLM failure: rate limit
+            # / quota exhausted (HTTP 429). Non-devs don't know what 429 means.
+            es = str(e)
+            if "429" in es or "Too Many Requests" in es or "quota" in es.lower():
+                hint = ("This provider hit its rate limit / quota. Wait a bit, "
+                        "switch to a different provider (e.g. DeepSeek), or use "
+                        "a local LLM via LM Studio. Then transcribe again.")
+                log(hint, "warn")
+                warnings.append(hint)
+            else:
+                warnings.append(msg)
         progress.complete("summarize")
 
         return {
