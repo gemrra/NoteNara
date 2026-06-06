@@ -147,8 +147,10 @@ class LLMClient:
 
     def _test_gemini(self) -> ConnectionResult:
         try:
+            # Key in header, not URL — avoids leaking it in any error string.
             r = requests.get(
-                f"{self.base_url}/models?key={self.api_key}",
+                f"{self.base_url}/models",
+                headers={"x-goog-api-key": self.api_key},
                 timeout=5)
             r.raise_for_status()
             data = r.json()
@@ -162,7 +164,7 @@ class LLMClient:
         except requests.exceptions.HTTPError as e:
             return ConnectionResult(ok=False, error=f"HTTP {e.response.status_code}")
         except Exception as e:
-            return ConnectionResult(ok=False, error=str(e))
+            return ConnectionResult(ok=False, error=_redact_secrets(str(e)))
 
     def resolve_model(self) -> str:
         """Resolve self.model. Cloud providers (Anthropic/Gemini) require an
@@ -463,17 +465,22 @@ class LLMClient:
         if sys_msg:
             body["systemInstruction"] = {"parts": [{"text": sys_msg}]}
 
-        url = (f"{self.base_url}/models/{model}:generateContent"
-               f"?key={self.api_key}")
+        # Pass the API key in a header (x-goog-api-key), NOT the URL query
+        # string. If we put it in the URL, the key leaks into any logged
+        # error message (requests includes the full URL in HTTPError text).
+        url = f"{self.base_url}/models/{model}:generateContent"
         try:
             r = requests.post(
                 url,
-                headers={"content-type": "application/json"},
+                headers={
+                    "content-type": "application/json",
+                    "x-goog-api-key": self.api_key,
+                },
                 json=body,
                 timeout=self.timeout,
             )
         except requests.exceptions.RequestException as e:
-            raise RuntimeError(f"Gemini request failed: {e}") from e
+            raise RuntimeError(f"Gemini request failed: {_redact_secrets(str(e))}") from e
         r.raise_for_status()
         data = r.json()
         try:
@@ -483,6 +490,28 @@ class LLMClient:
 
 
 _EMBEDDING_HINTS = ("embed", "embedding", "bge-", "e5-")
+
+# Redact secrets from text before it reaches a log / UI. Covers the common
+# leak vectors: `key=...` / `api_key=...` URL params, Bearer tokens, and
+# known provider key prefixes (Google AQ., OpenAI sk-, Anthropic sk-ant-).
+_SECRET_PATTERNS = [
+    re.compile(r"(?i)([?&](?:key|api_key|access_token)=)[^&\s\"']+"),
+    re.compile(r"(?i)(Bearer\s+)[A-Za-z0-9._\-]+"),
+    re.compile(r"\bAQ\.[A-Za-z0-9._\-]{10,}"),       # Google API keys
+    re.compile(r"\bsk-(?:ant-)?[A-Za-z0-9._\-]{20,}"),  # OpenAI / Anthropic
+]
+
+
+def _redact_secrets(text: str) -> str:
+    """Strip API keys / tokens out of a string so they never hit logs."""
+    if not text:
+        return text
+    out = text
+    out = _SECRET_PATTERNS[0].sub(r"\1[REDACTED]", out)
+    out = _SECRET_PATTERNS[1].sub(r"\1[REDACTED]", out)
+    out = _SECRET_PATTERNS[2].sub("[REDACTED]", out)
+    out = _SECRET_PATTERNS[3].sub("[REDACTED]", out)
+    return out
 
 
 def _looks_like_embedding(name: str) -> bool:

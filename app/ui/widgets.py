@@ -10,10 +10,31 @@ from __future__ import annotations
 
 import datetime
 import os
+import re
 import tkinter as tk
 
 from ..constants import C, F, FONTS, LOGS_DIR
 from ..i18n import t
+
+
+# Scrub API keys / tokens from any string before it reaches the log file or
+# the on-screen log. Self-contained (no import from services) so the logger
+# has no heavy dependencies. Covers URL key params, Bearer tokens, and known
+# provider key prefixes (Google AQ., OpenAI/Anthropic sk-).
+_SECRET_RE = [
+    (re.compile(r"(?i)([?&](?:key|api_key|access_token)=)[^&\s\"']+"), r"\1[REDACTED]"),
+    (re.compile(r"(?i)(Bearer\s+)[A-Za-z0-9._\-]+"), r"\1[REDACTED]"),
+    (re.compile(r"\bAQ\.[A-Za-z0-9._\-]{10,}"), "[REDACTED]"),
+    (re.compile(r"\bsk-(?:ant-)?[A-Za-z0-9._\-]{20,}"), "[REDACTED]"),
+]
+
+
+def _scrub_secrets(text: str) -> str:
+    if not text:
+        return text
+    for pat, repl in _SECRET_RE:
+        text = pat.sub(repl, text)
+    return text
 
 try:
     from tkinterdnd2 import DND_FILES  # noqa: F401  (re-exported by retro.py)
@@ -239,6 +260,9 @@ class TerminalLog(tk.Frame):
 
     def log(self, msg: str, kind: str = "info"):
         ts = datetime.datetime.now().strftime("%H:%M:%S")
+        # Defense-in-depth: scrub any API key / token before it touches the
+        # log file or the on-screen log. Catches leaks from any code path.
+        msg = _scrub_secrets(msg)
         # Mirror to disk first — even if Tk dies during the after(), the
         # line is already persisted. Multiline messages get one timestamp
         # at the start and each subsequent line is indented for readability.

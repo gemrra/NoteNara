@@ -197,6 +197,27 @@ class MeetingPipeline:
         progress.complete("save_local")
         _check_cancel(cancel)
 
+        # 2b. Empty transcript guard — if Whisper produced no text there is
+        # nothing to summarise. This is almost always a media problem (no
+        # audio track / silent recording / all-silence VAD), NOT an LLM
+        # problem. Surface it clearly instead of calling the LLM with an
+        # empty prompt and reporting a misleading "LLM unreachable".
+        if not transcript.text.strip():
+            msg = ("No speech found in the audio — the recording may have no "
+                   "audio track, be silent, or contain only noise/music. "
+                   "Check that the file actually has someone speaking.")
+            log(msg, "warn")
+            warnings.append(msg)
+            progress.start("summarize", "No speech detected")
+            progress.complete("summarize")
+            return {
+                "transcript_text": transcript.text,
+                "transcript_path": transcript_path,
+                "summary": None,
+                "warnings": warnings,
+                "empty_transcript": True,
+            }
+
         # 3. Summarise (or skip gracefully if LLM is down)
         summary = None
         try:

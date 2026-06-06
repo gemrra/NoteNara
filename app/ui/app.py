@@ -975,14 +975,21 @@ class PreviewView(BaseView):
                  font=F("mono", 9), anchor="w").pack(fill="x", pady=(4, 0))
 
         if summary is None:
-            # LLM failed — show only transcript + manual options
+            # Distinguish the two failure modes:
+            #   - empty transcript  → audio problem (no speech)
+            #   - non-empty but no summary → LLM problem (unreachable/quota)
+            transcript_empty = not (self.app._transcript_text or "").strip()
+            title_key = ("preview.no_speech" if transcript_empty
+                          else "preview.no_summary")
+            hint_key = ("preview.no_speech_hint" if transcript_empty
+                         else "preview.no_summary_hint")
             tk.Label(inner,
-                     text=t("preview.no_summary"),
+                     text=t(title_key),
                      bg=C["card"], fg=C["warn"],
                      font=F("body", 11), anchor="w").pack(
                 fill="x", padx=24, pady=(14, 6))
             tk.Label(inner,
-                     text=t("preview.no_summary_hint"),
+                     text=t(hint_key),
                      bg=C["card"], fg=C["ink2"],
                      font=F("body", 10), wraplength=480, justify="left",
                      anchor="w").pack(fill="x", padx=24, pady=(0, 14))
