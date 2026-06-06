@@ -1,14 +1,21 @@
-# NoteNara v2.1.0 — Windows bundle
+# NoteNara v2.1.1 — Windows bundle
 
-A self-contained Windows build. **No Python install, no `pip`, no CUDA toolkit required** — just download, extract, and run.
+Bug-fix release. Same self-contained Windows build — **no Python, no `pip`, no CUDA toolkit required**. Download, extract, run.
+
+## What's fixed in 2.1.1
+
+- **Security: API keys no longer leak into logs.** Previously, a failed Google Gemini request could write your full API key into the log file (the key was passed in the request URL). Keys are now sent in a header, and every log line is scrubbed so no API key or token can ever be written to disk. **If you used Gemini with an earlier build, rotate that key as a precaution.**
+- **Clearer error when a recording has no speech.** An empty transcript now shows *"No speech detected in the audio"* with guidance to check the file, instead of the misleading *"LLM unreachable"*.
+- **"Save to apply" reminder.** After Test connection succeeds, the message now reminds you to click **Save** — selecting a provider and testing it isn't enough; you must Save for it to take effect.
+- **Friendlier rate-limit / quota message.** A `429 Too Many Requests` from a cloud LLM now explains it in plain language and suggests switching provider (e.g. DeepSeek) or using a local LLM.
 
 ## Download & run
 
-1. Download `NoteNara-v2.1.0-win64.zip` below.
+1. Download `NoteNara-v2.1.1-win64.zip` below.
 2. Extract it anywhere (e.g. `C:\NoteNara` or your Desktop).
 3. Double-click **`NoteNara.exe`** inside the extracted folder.
 
-That's it — the app launches. GPU transcription works out of the box if you have an NVIDIA card; otherwise switch to CPU in Settings → Transcription → Hardware.
+That's it. GPU transcription works out of the box if you have an NVIDIA card; otherwise switch to CPU in Settings → Transcription → Hardware.
 
 > **Windows SmartScreen** may warn on first launch because the build isn't code-signed. Click **More info → Run anyway**.
 
@@ -29,13 +36,9 @@ The Whisper model (~1.5 GB) is the only piece not bundled — it downloads on fi
 NoteNara orchestrates your own accounts — it doesn't ship with any:
 
 - **An LLM** — pick one:
-  - **Cloud (easiest):** get an API key from OpenAI, DeepSeek, Anthropic, or Google Gemini, and paste it in Settings → AI Model. DeepSeek is the cheapest (~$0.01 per meeting).
+  - **Cloud (easiest):** get an API key from OpenAI, DeepSeek, Anthropic, or Google Gemini, and paste it in Settings → AI Model. DeepSeek is the cheapest (~$0.01 per meeting). **Remember to click Save after selecting a provider.**
   - **Local (private, free):** install [LM Studio](https://lmstudio.ai), load a chat model (Qwen 2.5 7B Instruct recommended), click "Start Server".
 - **Notion (optional)** — only if you want auto-publish. Create an integration at [notion.so/my-integrations](https://www.notion.so/my-integrations), share your target database with it, paste the token in Settings → Workspaces. If you just want a text summary, skip Notion and use **Save as .txt** instead.
-
-## First transcription
-
-The Whisper model (~1.5 GB) downloads automatically the first time you transcribe, into a `models/` folder next to the .exe. Subsequent runs are instant.
 
 ## Notes
 
